@@ -1,0 +1,22 @@
+# Backtesting Engine Configuration
+
+# The initial capital to start the backtest with.
+initial_capital: 100000.0
+
+# --- Transaction Cost Simulation ---
+
+# Commission settings
+# Represents the fee paid to the broker for executing a trade.
+commission:
+  # 'percentage' of trade value or 'fixed' amount per trade
+  type: "percentage"
+  # The commission rate (e.g., 0.075% for Binance futures taker fee)
+  value: 0.075
+
+# Slippage settings
+# Simulates the difference between the expected trade price and the actual execution price.
+slippage:
+  # 'percentage' of the entry/exit price or a 'fixed' price amount
+  type: "percentage"
+  # The slippage rate (e.g., 0.05% of the price)
+  value: 0.05

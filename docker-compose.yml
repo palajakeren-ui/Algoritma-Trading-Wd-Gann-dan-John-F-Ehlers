@@ -1,0 +1,89 @@
+# =====================================================
+# Gann Quant AI - Docker Compose Configuration
+# OPTIONAL: For containerized deployment
+# =====================================================
+# Usage:
+#   Basic:    docker-compose up -d gann-backend
+#   Full:     docker-compose --profile full up -d
+#   Dev:      docker-compose --profile dev up -d
+# =====================================================
+
+version: '3.8'
+
+services:
+  # ===========================================
+  # Main Trading Backend (Required)
+  # ===========================================
+  gann-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gann-quant-backend
+    restart: unless-stopped
+    ports:
+      - "${FLASK_PORT:-5000}:5000"
+    environment:
+      - FLASK_ENV=${FLASK_ENV:-production}
+      - FLASK_PORT=5000
+      - FLASK_HOST=0.0.0.0
+      - MASTER_KEY=${MASTER_KEY:-gann_quant_ai_production_key}
+      - TZ=${TZ:-Asia/Jakarta}
+    volumes:
+      - ./outputs:/app/outputs
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./vault:/app/vault
+      - ./configs:/app/configs
+    networks:
+      - gann-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/settings/execution-gate/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ===========================================
+  # Redis Cache (Optional - profile: full)
+  # ===========================================
+  redis:
+    image: redis:7-alpine
+    container_name: gann-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - gann-network
+    command: redis-server --appendonly yes
+    profiles:
+      - full
+      - dev
+
+  # ===========================================
+  # Nginx Reverse Proxy (Optional - profile: full)
+  # ===========================================
+  nginx:
+    image: nginx:alpine
+    container_name: gann-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - gann-backend
+    networks:
+      - gann-network
+    profiles:
+      - full
+
+networks:
+  gann-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+    driver: local
