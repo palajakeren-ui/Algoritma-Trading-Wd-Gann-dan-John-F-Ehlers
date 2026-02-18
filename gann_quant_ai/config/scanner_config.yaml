@@ -1,0 +1,787 @@
+# ================================================================
+# GANN QUANT AI - MARKET SCANNER CONFIGURATION v3.0
+# ================================================================
+# Multi-asset, multi-timeframe, multi-strategy scanner
+# ================================================================
+
+version: "3.0.0"
+
+# ================================================================
+# SCANNER SETTINGS
+# ================================================================
+scanner:
+  
+  enabled: true
+  mode: "continuous"  # continuous | scheduled | on_demand
+  
+  # Scan frequency
+  frequency:
+    continuous_interval: 60  # seconds
+    scheduled_times: ["09:00", "12:00", "15:00", "18:00"]  # UTC
+    
+  # Performance
+  performance:
+    parallel_processing: true
+    max_workers: 8
+    timeout_per_symbol: 30  # seconds
+    cache_results: true
+    cache_ttl: 300  # seconds
+
+# ================================================================
+# SCAN UNIVERSE
+# ================================================================
+universe:
+  
+  # Asset classes to scan
+  asset_classes:
+    - "forex"
+    - "crypto"
+    - "indices"
+    - "commodities"
+    - "stocks"
+    
+  # Specific instruments
+  instruments:
+    
+    forex:
+      majors:
+        - "EURUSD"
+        - "GBPUSD"
+        - "USDJPY"
+        - "USDCHF"
+        - "AUDUSD"
+        - "USDCAD"
+        - "NZDUSD"
+        
+      minors:
+        - "EURGBP"
+        - "EURJPY"
+        - "GBPJPY"
+        - "AUDJPY"
+        - "EURAUD"
+        - "EURCHF"
+        
+      exotics:
+        - "USDTRY"
+        - "USDZAR"
+        - "USDMXN"
+        
+    crypto:
+      - "BTCUSDT"
+      - "ETHUSDT"
+      - "BNBUSDT"
+      - "XRPUSDT"
+      - "ADAUSDT"
+      - "SOLUSDT"
+      - "DOGEUSDT"
+      - "MATICUSDT"
+      
+    indices:
+      - "US30"    # Dow Jones
+      - "US100"   # Nasdaq
+      - "US500"   # S&P 500
+      - "UK100"   # FTSE 100
+      - "DE30"    # DAX
+      - "JP225"   # Nikkei
+      
+    commodities:
+      - "XAUUSD"  # Gold
+      - "XAGUSD"  # Silver
+      - "USOIL"   # WTI Crude
+      - "UKOIL"   # Brent
+      - "NATGAS"  # Natural Gas
+      
+    stocks:
+      - "AAPL"
+      - "MSFT"
+      - "GOOGL"
+      - "AMZN"
+      - "TSLA"
+      - "META"
+      - "NVDA"
+      
+  # Watchlist management
+  watchlist:
+    dynamic: true
+    add_high_volume: true
+    add_trending: true
+    remove_inactive: true
+    max_instruments: 100
+
+# ================================================================
+# TIMEFRAMES
+# ================================================================
+timeframes:
+  
+  enabled:
+    - "M5"
+    - "M15"
+    - "M30"
+    - "H1"
+    - "H4"
+    - "D1"
+    - "W1"
+    
+  # Primary timeframe for ranking
+  primary: "H4"
+  
+  # Multi-timeframe analysis
+  mtf:
+    enabled: true
+    alignment_required: true
+    
+    hierarchy:
+      higher: "D1"
+      medium: "H4"
+      lower: "H1"
+
+# ================================================================
+# SCAN STRATEGIES
+# ================================================================
+strategies:
+  
+  # Gann Scanner
+  gann:
+    enabled: true
+    priority: 1
+    
+    scans:
+      # Price near Gann levels
+      near_gann_level:
+        enabled: true
+        tolerance_percent: 0.5
+        levels:
+          - "square_of_9"
+          - "square_of_144"
+          - "cardinal_angles"
+          
+      # Gann angle bounce
+      angle_bounce:
+        enabled: true
+        angles: ["1x1", "1x2", "2x1"]
+        
+      # Time cycle hits
+      time_cycle:
+        enabled: true
+        cycles: [7, 30, 45, 90, 144, 360]
+        tolerance_days: 2
+        
+      # Wave completion
+      wave_completion:
+        enabled: true
+        wave_counts: [3, 5, 7]
+        
+  # Astro Scanner
+  astro:
+    enabled: true
+    priority: 2
+    
+    scans:
+      # Major planetary aspects
+      major_aspects:
+        enabled: true
+        aspects: ["conjunction", "opposition", "square"]
+        orb: 3.0
+        planets: ["Mars", "Jupiter", "Saturn"]
+        
+      # Retrograde stations
+      retrograde:
+        enabled: true
+        days_before: 5
+        days_after: 5
+        
+      # Lunar phases
+      lunar:
+        enabled: true
+        phases: ["new_moon", "full_moon"]
+        orb_days: 2
+        
+      # Eclipse windows
+      eclipse:
+        enabled: true
+        days_before: 30
+        
+  # Ehlers Scanner
+  ehlers:
+    enabled: true
+    priority: 1
+    
+    scans:
+      # MAMA/FAMA crossover
+      mama_cross:
+        enabled: true
+        recent_bars: 3
+        
+      # Fisher Transform extremes
+      fisher_extreme:
+        enabled: true
+        threshold: 2.0
+        
+      # Cyber Cycle turning points
+      cyber_cycle:
+        enabled: true
+        zero_cross: true
+        
+      # Market mode detection
+      market_mode:
+        enabled: true
+        prefer_mode: "cycling"  # trending | cycling | any
+        
+  # Machine Learning Scanner
+  ml:
+    enabled: true
+    priority: 1
+    
+    scans:
+      # High probability setups
+      high_probability:
+        enabled: true
+        min_confidence: 0.75
+        
+      # Pattern recognition
+      patterns:
+        enabled: true
+        types: ["bullish", "bearish"]
+        
+      # Anomaly detection
+      anomaly:
+        enabled: true
+        unusual_behavior: true
+        
+  # Technical Scanner
+  technical:
+    enabled: true
+    priority: 2
+    
+    scans:
+      # Support/Resistance
+      sr_levels:
+        enabled: true
+        near_level: true
+        bounce: true
+        breakout: true
+        
+      # Trend
+      trend:
+        enabled: true
+        strong_trend: true
+        trend_reversal: true
+        
+      # Momentum
+      momentum:
+        enabled: true
+        oversold: true
+        overbought: true
+        divergence: true
+        
+      # Volume
+      volume:
+        enabled: true
+        volume_spike: true
+        volume_dry_up: true
+        
+  # Candlestick Pattern Scanner
+  candlestick:
+    enabled: true
+    priority: 2
+    
+    patterns:
+      bullish:
+        - "hammer"
+        - "morning_star"
+        - "bullish_engulfing"
+        - "piercing_pattern"
+        
+      bearish:
+        - "shooting_star"
+        - "evening_star"
+        - "bearish_engulfing"
+        - "dark_cloud_cover"
+        
+      reversal:
+        - "doji"
+        - "harami"
+        - "three_white_soldiers"
+        - "three_black_crows"
+        
+  # Options Flow Scanner (if available)
+  options:
+    enabled: false
+    
+    scans:
+      unusual_activity: true
+      gamma_squeeze: true
+      high_iv: true
+
+# ================================================================
+# SIGNAL SCORING
+# ================================================================
+scoring:
+  
+  # Score calculation method
+  method: "weighted_sum"  # weighted_sum | multiplicative | neural
+  
+  # Strategy weights
+  weights:
+    gann: 0.30
+    astro: 0.15
+    ehlers: 0.25
+    ml: 0.20
+    technical: 0.10
+    
+  # Score components
+  components:
+    
+    # Confluence score
+    confluence:
+      weight: 0.30
+      calculation: "count_signals"
+      bonus_for_agreement: 0.1
+      
+    # Strength score
+    strength:
+      weight: 0.25
+      factors:
+        - "signal_clarity"
+        - "historical_success"
+        - "confidence_level"
+        
+    # Timing score
+    timing:
+      weight: 0.20
+      factors:
+        - "time_cycle_alignment"
+        - "astro_timing"
+        - "session_timing"
+        
+    # Risk-reward score
+    risk_reward:
+      weight: 0.15
+      min_acceptable_rr: 2.5
+      
+    # Trend alignment
+    trend:
+      weight: 0.10
+      mtf_alignment: true
+      
+  # Score thresholds
+  thresholds:
+    excellent: 0.85
+    good: 0.70
+    acceptable: 0.60
+    poor: 0.50
+
+# ================================================================
+# FILTERING
+# ================================================================
+filtering:
+  
+  # Pre-scan filters
+  pre_scan:
+    
+    # Liquidity filter
+    liquidity:
+      enabled:  true
+      min_volume: 1000
+      min_liquidity_score: 0.5
+      
+    # Spread filter
+    spread:
+      enabled: true
+      max_spread_pips: 3.0
+      max_spread_percent: 0.1
+      
+    # Volatility filter
+    volatility:
+      enabled: true
+      min_atr: 0.0001
+      max_atr: 0.01
+      
+    # Market hours filter
+    hours:
+      enabled: true
+      preferred_sessions: ["london", "new_york"]
+      
+  # Post-scan filters
+  post_scan:
+    
+    # Score filter
+    score:
+      enabled: true
+      min_score: 0.60
+      
+    # Duplicate filter
+    duplicates:
+      enabled: true
+      remove_similar: true
+      similarity_threshold: 0.90
+      
+    # Correlation filter
+    correlation:
+      enabled: true
+      max_correlated_signals: 3
+      correlation_threshold: 0.75
+      
+    # Risk filter
+    risk:
+      enabled: true
+      check_portfolio_heat: true
+      check_exposure: true
+
+# ================================================================
+# RANKING
+# ================================================================
+ranking:
+  
+  # Ranking method
+  method: "composite_score"  # composite_score | sharpe | expectancy | custom
+  
+  # Ranking factors
+  factors:
+    - factor: "signal_score"
+      weight: 0.40
+      
+    - factor: "risk_reward"
+      weight: 0.25
+      
+    - factor: "confluence"
+      weight: 0.20
+      
+    - factor: "timing"
+      weight: 0.10
+      
+    - factor: "historical_performance"
+      weight: 0.05
+      
+  # Output
+  output:
+    top_n: 10
+    group_by_asset_class: true
+    sort_order: "descending"
+
+# ================================================================
+# OUTPUT CONFIGURATION
+# ================================================================
+output:
+  
+  # Output format
+  formats:
+    - "csv"
+    - "json"
+    - "html"
+    - "excel"
+    
+  # CSV output
+  csv:
+    enabled: true
+    path: "outputs/market_scanner_output.csv"
+    delimiter: ","
+    
+    columns:
+      - "timestamp"
+      - "symbol"
+      - "timeframe"
+      - "direction"
+      - "score"
+      - "strategies"
+      - "entry_price"
+      - "stop_loss"
+      - "take_profit"
+      - "risk_reward"
+      - "confluence_count"
+      - "notes"
+      
+  # JSON output
+  json:
+    enabled: true
+    path: "outputs/market_scanner_output.json"
+    pretty_print: true
+    
+  # HTML report
+  html:
+    enabled: true
+    path: "outputs/reports/scanner_report.html"
+    template: "templates/scanner_template.html"
+    
+    include:
+      - "summary_statistics"
+      - "top_opportunities"
+      - "charts"
+      - "detailed_analysis"
+      
+  # Excel workbook
+  excel:
+    enabled: true
+    path: "outputs/market_scanner_output.xlsx"
+    
+    sheets:
+      - name: "Top Signals"
+        content: "ranked_signals"
+        
+      - name: "By Asset Class"
+        content: "grouped_signals"
+        
+      - name: "Statistics"
+        content: "scanner_stats"
+        
+      - name: "Alerts"
+        content: "high_priority_signals"
+
+# ================================================================
+# ALERTS & NOTIFICATIONS
+# ================================================================
+alerts:
+  
+  enabled: true
+  
+  # Alert triggers
+  triggers:
+    
+    # High score signal
+    high_score:
+      enabled: true
+      threshold: 0.85
+      priority: "high"
+      
+    # Multiple confluence
+    confluence:
+      enabled: true
+      min_strategies: 4
+      priority: "medium"
+      
+    # Time-sensitive
+    time_sensitive:
+      enabled: true
+      categories:
+        - "astro_event"
+        - "gann_time_cycle"
+        - "news_event"
+      priority: "high"
+      
+    # Rare setup
+    rare_setup:
+      enabled: true
+      frequency_threshold: 0.02  # Less than 2% occurrence
+      priority: "medium"
+      
+  # Notification channels
+  channels:
+    
+    # Telegram
+    telegram:
+      enabled: true
+      bot_token: "${TELEGRAM_BOT_TOKEN}"
+      chat_id: "${TELEGRAM_CHAT_ID}"
+      
+      format: "detailed"  # brief | detailed | chart
+      
+    # Email
+    email:
+      enabled: true
+      smtp_server: "smtp.gmail.com"
+      smtp_port: 587
+      from: "${EMAIL_FROM}"
+      to: "${EMAIL_TO}"
+      
+      include_chart: true
+      
+    # Webhook
+    webhook:
+      enabled: false
+      url: "${WEBHOOK_URL}"
+      method: "POST"
+      headers:
+        Content-Type: "application/json"
+        
+    # Discord
+    discord:
+      enabled: false
+      webhook_url: "${DISCORD_WEBHOOK}"
+      
+  # Alert throttling
+  throttling:
+    enabled: true
+    max_alerts_per_hour: 10
+    min_interval_seconds: 300  # 5 minutes between similar alerts
+
+# ================================================================
+# STATISTICS & ANALYTICS
+# ================================================================
+analytics:
+  
+  # Scanner statistics
+  statistics:
+    enabled: true
+    
+    metrics:
+      - "total_scans"
+      - "signals_generated"
+      - "avg_signal_score"
+      - "top_performing_strategy"
+      - "signals_by_asset_class"
+      - "signals_by_timeframe"
+      - "signals_by_direction"
+      
+  # Historical tracking
+  historical:
+    enabled: true
+    track_signal_outcomes: true
+    lookback_period: 90  # days
+    
+  # Performance analysis
+  performance:
+    enabled: true
+    
+    metrics:
+      - "signal_accuracy"
+      - "win_rate_by_strategy"
+      - "avg_profit_per_signal"
+      - "best_instruments"
+      - "best_timeframes"
+      
+  # Reporting
+  reporting:
+    frequency: "daily"
+    format: "html"
+    include_charts: true
+
+# ================================================================
+# ADVANCED FEATURES
+# ================================================================
+advanced:
+  
+  # Forecasting scanner
+  forecasting:
+    enabled: true
+    
+    # Scan for upcoming events
+    horizon_days: 30
+    
+    events:
+      - "gann_time_cycles"
+      - "planetary_aspects"
+      - "fibonacci_time"
+      - "seasonal_patterns"
+      
+  # Correlation analysis
+  correlation:
+    enabled: true
+    identify_related_moves: true
+    basket_trading_opportunities: true
+    
+  # Divergence scanner
+  divergence:
+    enabled: true
+    
+    types:
+      - "price_indicator_divergence"
+      - "intermarket_divergence"
+      - "options_divergence"
+      
+  # Smart order flow
+  order_flow:
+    enabled: false  # Requires Level 2 data
+    
+    detect:
+      - "institutional_orders"
+      - "dark_pool_activity"
+      - "sweep_orders"
+      
+  # Machine learning enhancements
+  ml_enhancements:
+    enabled: true
+    
+    # Pattern learning
+    learn_patterns:
+      enabled: true
+      auto_improve: true
+      
+    # Anomaly detection
+    anomaly:
+      enabled: true
+      alert_unusual: true
+
+# ================================================================
+# INTEGRATION
+# ================================================================
+integration:
+  
+  # TradingView integration
+  tradingview:
+    enabled: false
+    export_watchlist: true
+    export_alerts: true
+    
+  # MetaTrader integration
+  metatrader:
+    enabled: true
+    auto_add_to_watchlist: true
+    
+  # API integration
+  api:
+    enabled: true
+    endpoint: "/api/v1/scanner"
+    authentication: "api_key"
+    
+  # Dashboard integration
+  dashboard:
+    enabled: true
+    realtime_updates: true
+    websocket: true
+
+# ================================================================
+# SCHEDULER
+# ================================================================
+scheduler:
+  
+  enabled: true
+  
+  # Scheduled scans
+  schedules:
+    
+    - name: "morning_scan"
+      time: "09:00"
+      timezone: "UTC"
+      days: ["monday", "tuesday", "wednesday", "thursday", "friday"]
+      
+    - name: "midday_scan"
+      time: "12:00"
+      timezone: "UTC"
+      days: ["monday", "tuesday", "wednesday", "thursday", "friday"]
+      
+    - name: "afternoon_scan"
+      time: "15:00"
+      timezone: "UTC"
+      days: ["monday", "tuesday", "wednesday", "thursday", "friday"]
+      
+    - name: "evening_scan"
+      time: "18:00"
+      timezone: "UTC"
+      days: ["monday", "tuesday", "wednesday", "thursday", "friday"]
+      
+    - name: "weekend_scan"
+      time: "10:00"
+      timezone: "UTC"
+      days: ["sunday"]
+      description: "Preparation for upcoming week"
+
+# ================================================================
+# OPTIMIZATION
+# ================================================================
+optimization:
+  
+  # Performance optimization
+  performance:
+    parallel_scanning: true
+    cached_calculations: true
+    incremental_updates: true
+    
+  # Resource management
+  resources:
+    max_memory_mb: 4096
+    max_cpu_percent: 80
+    
+  # Database optimization
+  database:
+    index_optimization: true
+    query_caching: true

@@ -1,0 +1,103 @@
+# =====================================================
+# Docker Ignore File
+# Exclude unnecessary files from Docker build
+# =====================================================
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python cache
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+.eggs/
+*.manifest
+*.spec
+
+# Virtual environments
+venv/
+env/
+.env
+.venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# Testing
+.coverage
+.pytest_cache/
+htmlcov/
+.tox/
+.nox/
+
+# Documentation build
+docs/_build/
+
+# Logs and data (mounted as volumes)
+logs/
+outputs/
+data/
+vault/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+*.bak
+*.tmp
+
+# Docker files (don't include in context)
+docker-compose*.yml
+Dockerfile*
+.docker/
+
+# Backup files
+backups/
+*.tar.gz
+*.zip
+
+# Frontend (if any)
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+
+# Secrets (NEVER include)
+*.pem
+*.key
+*.crt
+secrets/
+.env.local
+.env.production
+
+# Test files
+tests/
+test_*.py
+*_test.py
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Model files (large)
+models/*.pkl
+models/*.h5
+models/*.pt
+*.onnx

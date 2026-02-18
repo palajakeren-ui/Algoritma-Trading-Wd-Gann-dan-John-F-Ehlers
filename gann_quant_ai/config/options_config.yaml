@@ -1,0 +1,56 @@
+# ================================================================
+# OPTIONS CONFIGURATION v3.0
+# ================================================================
+
+version: "3.0.0"
+
+strategy:
+  type: "iron_condor" # vertical_spread, iron_condor, butterfly
+  legs: 4
+
+greeks:
+  delta:
+    entry_min: 0.10
+    entry_max: 0.30
+  theta:
+    target_decay: -0.05
+  vega:
+    iv_rank_entry_min: 30
+    iv_rank_entry_max: 70
+
+expiry:
+  min_dte: 21
+  max_dte: 45
+  target_exit_dte: 7
+
+# Options Sentiment Indicators
+sentiment_analysis:
+  # Put/Call Ratio
+  pcr:
+    enabled: true
+    calculation: "volume" # "volume" or "open_interest"
+    smoothing_period: 10
+
+  # Volatility Skew
+  skew:
+    enabled: true
+    term: "short" # "short" (e.g., 30 days) or "long" (e.g., 90 days)
+    metric: "25_delta_skew" # Difference in IV between 25-delta put and 25-delta call
+
+# Greeks Calculation Method
+greeks_calculation:
+  model: "Black-Scholes" # "Black-Scholes" or "Binomial"
+  interest_rate: 0.02 # Risk-free interest rate for calculation
+
+# Option trade signal generation
+# Conditions for generating signals based on options data.
+signal_generation:
+  # Example: Signal a bearish reversal if short-term skew rises sharply
+  - name: "bearish_skew_spike"
+    condition: "skew_short_term > 0.1 and skew_change_1d > 0.05"
+    signal: "BEARISH_REVERSAL"
+
+  # Example: Signal bullish trend if Put/Call ratio is low and falling
+  - name: "bullish_pcr_trend"
+    condition: "pcr_volume_10d < 0.7 and pcr_change_1d < 0"
+    signal: "BULLISH_CONTINUATION"

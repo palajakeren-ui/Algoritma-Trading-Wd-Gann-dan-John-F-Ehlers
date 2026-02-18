@@ -1,0 +1,228 @@
+# ================================================================
+# OPTIMIZER_CONFIG.YAML - v3.0
+# ================================================================
+
+version: "3.0.0"
+
+# ================================================================
+# HYPERPARAMETER OPTIMIZATION
+# ================================================================
+hyperparameter_optimization:
+  
+  enabled: true
+  method: "optuna"  # optuna | bayesian | grid_search | random_search | genetic
+  
+  # Optuna configuration
+  optuna:
+    enabled: true
+    
+    # Study configuration
+    study:
+      study_name: "gann_quant_optimizer"
+      direction: "maximize"  # maximize | minimize
+      storage: "sqlite:///optuna_studies.db"
+      load_if_exists: true
+      
+    # Optimization
+    optimization:
+      n_trials: 200
+      timeout: 86400  # 24 hours
+      n_jobs: 4
+      
+    # Sampler
+    sampler:
+      type: "TPE"  # TPE | Random | Grid | CmaEs
+      
+      tpe:
+        n_startup_trials: 20
+        n_ei_candidates: 24
+        multivariate: true
+        
+    # Pruner
+    pruner:
+      type: "MedianPruner"  # MedianPruner | SuccessiveHalving | Hyperband
+      
+      median:
+        n_startup_trials: 10
+        n_warmup_steps: 20
+        interval_steps: 5
+        
+  # Search space
+  search_space:
+    
+    # Gann parameters
+    gann:
+      square_tolerance:
+        type: "float"
+        low: 0.1
+        high: 1.0
+        step: 0.1
+        
+      angle_buffer:
+        type: "int"
+        low: 1
+        high: 10
+        
+    # Ehlers parameters
+    ehlers:
+      mama_fast_limit:
+        type: "float"
+        low: 0.3
+        high: 0.9
+        
+      mama_slow_limit:
+        type: "float"
+        low: 0.01
+        high: 0.1
+        
+      fisher_period:
+        type: "int"
+        low: 5
+        high: 20
+        
+    # ML parameters
+    ml:
+      learning_rate:
+        type: "loguniform"
+        low: 0.00001
+        high: 0.01
+        
+      n_estimators:
+        type: "int"
+        low: 100
+        high: 1000
+        step: 100
+        
+      max_depth:
+        type: "int"
+        low: 3
+        high: 15
+        
+    # Risk parameters
+    risk:
+      position_size:
+        type: "float"
+        low: 0.01
+        high: 0.05
+        step: 0.01
+        
+      stop_loss_atr:
+        type: "float"
+        low: 1.0
+        high: 3.0
+        step: 0.5
+        
+  # Objective function
+  objective:
+    metric: "sharpe_ratio"  # sharpe_ratio | sortino | calmar | total_return | win_rate
+    
+    # Multi-objective optimization
+    multi_objective:
+      enabled: false
+      metrics:
+        - "sharpe_ratio"
+        - "max_drawdown"
+        - "win_rate"
+        
+  # Validation
+  validation:
+    method: "walk_forward"  # walk_forward | k_fold | time_series_split
+    
+    walk_forward:
+      train_period: 252  # days
+      test_period: 63
+      step: 21
+
+# ================================================================
+# WALK-FORWARD OPTIMIZATION
+# ================================================================
+walk_forward:
+  
+  enabled: true
+  
+  # Configuration
+  configuration:
+    train_window: 252  # trading days
+    test_window: 63
+    step_size: 21
+    anchored: false  # false = rolling window
+    
+  # Re-optimization frequency
+  reoptimize:
+    enabled: true
+    frequency: "monthly"  # weekly | monthly | quarterly
+    
+  # Performance tracking
+  tracking:
+    enabled: true
+    save_results: true
+    compare_in_sample_oos: true
+
+# ================================================================
+# GENETIC ALGORITHM OPTIMIZATION
+# ================================================================
+genetic:
+  
+  enabled: false
+  
+  # GA parameters
+  parameters:
+    population_size: 100
+    generations: 50
+    mutation_rate: 0.1
+    crossover_rate: 0.8
+    elitism: 0.1
+    
+  # Selection
+  selection:
+    method: "tournament"  # tournament | roulette | rank
+    tournament_size: 5
+    
+  # Fitness function
+  fitness:
+    metric: "sharpe_ratio"
+    penalty_for_overfitting: 0.1
+
+# ================================================================
+# GRID SEARCH
+# ================================================================
+grid_search:
+  
+  enabled: false
+  
+  # Parameters grid
+  grid:
+    learning_rate: [0.001, 0.01, 0.1]
+    n_estimators: [100, 300, 500]
+    max_depth: [5, 10, 15]
+    
+  # Exhaustive search
+  exhaustive: true
+  n_jobs: -1
+
+# ================================================================
+# RESULTS ANALYSIS
+# ================================================================
+results:
+  
+  # Save results
+  save:
+    enabled: true
+    path: "outputs/optimization_results/"
+    format: ["csv", "json"]
+    
+  # Visualization
+  visualization:
+    enabled: true
+    
+    plots:
+      - "optimization_history"
+      - "parameter_importance"
+      - "parallel_coordinate"
+      - "contour_plot"
+      
+  # Best parameters
+  best_params:
+    save: true
+    auto_apply: false  # Require manual approval
+    backup_current: true
