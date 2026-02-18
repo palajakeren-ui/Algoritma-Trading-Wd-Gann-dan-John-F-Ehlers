@@ -1081,6 +1081,46 @@ def test_broker_connection():
                 "status": "simulated"
             }
             
+        elif broker_type == 'dex':
+            wallet_address = data.get('dexWalletAddress', '')
+            private_key = data.get('dexPrivateKey', '')
+            
+            if not wallet_address or not private_key:
+                result["message"] = "Wallet address and private key are required"
+                return jsonify(result), 400
+            
+            try:
+                from connectors.dex_connector import create_dex_connector
+                
+                connector = create_dex_connector(data)
+                
+                # Validate address format first
+                if not connector.validate_address():
+                    dex_chain = data.get('dexChain', 'unknown')
+                    result["message"] = f"Invalid wallet address format for {dex_chain}"
+                    return jsonify(result), 400
+                
+                # Test full connection (RPC + wallet)
+                dex_result = connector.test_connection()
+                
+                result["connected"] = dex_result.get("connected", False)
+                result["message"] = dex_result.get("message", dex_result.get("error", "Unknown error"))
+                result["wallet"] = {
+                    "address": dex_result.get("wallet", wallet_address[:6] + "..." + wallet_address[-4:]),
+                    "chain": data.get('dexChain', ''),
+                    "protocol": data.get('dexExchange', ''),
+                    "rpcEndpoint": dex_result.get("rpc_endpoint", ""),
+                    "slippage": data.get('dexSlippage', 0.5),
+                    "priorityFee": data.get('dexPriorityFee', 0.0001),
+                    "status": "connected" if dex_result.get("connected") else "failed"
+                }
+                
+                if dex_result.get("balance"):
+                    result["balance"] = dex_result["balance"]
+                    
+            except Exception as e:
+                result["message"] = f"DEX connection error: {str(e)}"
+            
         else:
             result["message"] = "Unknown broker type"
             

@@ -18,7 +18,9 @@ export const TRADING_MODES_SYNC = {
     fields: [
         'id', 'mode', 'enabled', 'exchange', 'leverage', 'marginMode',
         'riskPerTrade', 'maxDrawdown', 'dailyLossLimit', 'kellyFraction',
-        'maxOpenPositions', 'hedging', 'autoDeleverage', 'riskType'
+        'maxOpenPositions', 'hedging', 'autoDeleverage', 'riskType',
+        'brokerType', 'dexChain', 'dexExchange', 'dexWalletAddress',
+        'dexSlippage', 'dexPriorityFee', 'dexAutoSlippage', 'dexAutoPriorityFee'
     ]
 };
 
@@ -163,7 +165,7 @@ export const PAGE_CONFIG_DEPENDENCIES = {
 // SYNC STATUS SUMMARY
 // ============================================================================
 export const SYNC_STATUS = {
-    lastVerified: '2026-01-13',
+    lastVerified: '2026-02-18',
     status: 'SYNCHRONIZED',
     coveragePercent: 100,
     issues: [],
@@ -171,6 +173,8 @@ export const SYNC_STATUS = {
         'Risk settings support both DYNAMIC and FIXED modes',
         'Strategy weights synced for all 18 timeframes',
         'Manual leverage per symbol supported',
-        'Notification settings fully mapped to notifier.yaml'
+        'Notification settings fully mapped to notifier.yaml',
+        'DEX broker type supported: Solana, Ethereum, Base, BSC, Arbitrum, Polygon, Hyperliquid',
+        'DEX fields (chain, exchange, wallet, slippage, priorityFee) synced to broker_config.yaml'
     ]
 };

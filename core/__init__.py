@@ -40,6 +40,8 @@ from .settings_api import settings_api, register_settings_routes
 from .market_data_api import market_data_api, register_market_data_routes
 from .execution_api import execution_api, register_execution_routes
 from .trading_api import trading_api, register_trading_routes
+from .mode_controller import ModeController, get_mode_controller
+from .agent_orchestration_api import agent_api, register_agent_routes
 
 __all__ = [
     'DataFeed',
@@ -112,8 +114,13 @@ __all__ = [
     'register_execution_routes',
     'trading_api',
     'register_trading_routes',
+    # Mode Controller & Agent API
+    'ModeController',
+    'get_mode_controller',
+    'agent_api',
+    'register_agent_routes',
 ]
 
-__version__ = '2.2.0'
+__version__ = '2.3.0'
 
 

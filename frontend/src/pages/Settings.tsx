@@ -14,7 +14,8 @@ import {
   Settings as SettingsIcon, Save, Download, Upload, Search, Plus, Trash2,
   TrendingUp, DollarSign, Settings2, Shield, Zap, Activity, AlertTriangle,
   CheckCircle2, Play, Pause, Layers, Server, Wifi, WifiOff, Key, Eye, EyeOff,
-  RefreshCw, Clock, Sparkles, Target, Telescope, Waves, Grid, Brain, Cpu
+  RefreshCw, Clock, Sparkles, Target, Telescope, Waves, Grid, Brain, Cpu,
+  Globe, ShieldCheck
 } from "lucide-react";
 import { toast } from "sonner";
 import { tradingInstruments as instrumentsData, InstrumentCategory, Instrument } from "@/data/tradingInstruments";
@@ -109,7 +110,7 @@ interface TradingModeConfig {
   riskRewardRatio: number;
   fixedLotSize: number;
   maxOpenPositions: number;
-  brokerType: "crypto_exchange" | "metatrader" | "fix" | "none";
+  brokerType: "crypto_exchange" | "metatrader" | "fix" | "dex" | "none";
   exchange: string;
   endpoint: string;
   apiKey: string;
@@ -132,6 +133,14 @@ interface TradingModeConfig {
   fixHeartbeatInterval: number;
   fixResetOnLogon: boolean;
   fixSslEnabled: boolean;
+  dexChain: string;
+  dexExchange: string;
+  dexWalletAddress: string;
+  dexPrivateKey: string;
+  dexSlippage: number;
+  dexPriorityFee: number;
+  dexAutoSlippage: boolean;
+  dexAutoPriorityFee: boolean;
   timeEntryEnabled: boolean;
   entryStartTime: string;
   entryEndTime: string;
@@ -156,6 +165,63 @@ const EXCHANGE_OPTIONS = [
   { value: "phemex", label: "Phemex", icon: "🦅", type: "both", hasPassphrase: false, defaultEndpoint: "https://api.phemex.com" },
 ];
 
+const DEX_CHAINS = [
+  { value: "solana", label: "Solana", icon: "◎" },
+  { value: "ethereum", label: "Ethereum", icon: "Ξ" },
+  { value: "base", label: "Base", icon: "🔵" },
+  { value: "bsc", label: "BSC", icon: "🔶" },
+  { value: "arbitrum", label: "Arbitrum", icon: "🟦" },
+  { value: "polygon", label: "Polygon", icon: "🟣" },
+  { value: "hyperliquid", label: "Hyperliquid", icon: "HL" },
+];
+
+const DEX_EXCHANGES: Record<string, { value: string, label: string, icon: string }[]> = {
+  solana: [
+    { value: "jupiter", label: "Jupiter", icon: "🪐" },
+    { value: "raydium", label: "Raydium", icon: "☀️" },
+    { value: "orca", label: "Orca", icon: "🐳" },
+  ],
+  ethereum: [
+    { value: "uniswap_v3", label: "Uniswap V3", icon: "🦄" },
+    { value: "sushiswap", label: "SushiSwap", icon: "🍣" },
+    { value: "curve", label: "Curve", icon: "🧮" },
+  ],
+  base: [
+    { value: "aerodrome", label: "Aerodrome", icon: "✈️" },
+    { value: "base_swap", label: "BaseSwap", icon: "🔵" },
+    { value: "uniswap_v3", label: "Uniswap V3", icon: "🦄" },
+  ],
+  bsc: [
+    { value: "pancakeswap", label: "PancakeSwap", icon: "🥞" },
+    { value: "biswap", label: "BiSwap", icon: "🅱️" },
+  ],
+  arbitrum: [
+    { value: "uniswap_v3", label: "Uniswap V3", icon: "🦄" },
+    { value: "camelot", label: "Camelot", icon: "🏰" },
+  ]
+};
+
+const DEX_PERP_EXCHANGES: Record<string, { value: string, label: string, icon: string }[]> = {
+  solana: [
+    { value: "drift", label: "Drift Protocol", icon: "🌀" },
+    { value: "jupiter_perps", label: "Jupiter Perps", icon: "🪐" },
+    { value: "zeta", label: "Zeta Markets", icon: "Ζ" },
+  ],
+  arbitrum: [
+    { value: "gmx_v2", label: "GMX V2", icon: "🫐" },
+    { value: "vertex", label: "Vertex", icon: "📐" },
+    { value: "gm_perp", label: "Gains Network", icon: "🍏" },
+  ],
+  hyperliquid: [
+    { value: "hyperliquid", label: "Hyperliquid L1", icon: "HL" },
+  ],
+  base: [
+    { value: "dydx", label: "dYdX Chain", icon: "🟣" },
+    { value: "intentx", label: "IntentX", icon: "IX" },
+    { value: "synthetix", label: "Synthetix V3", icon: "⚔️" },
+  ],
+};
+
 interface ManualLeverageConfig {
   instrument: string;
   leverage: number;
@@ -163,9 +229,9 @@ interface ManualLeverageConfig {
 }
 
 const NumericInput = ({
-  value, onChange, step = "1", className = "", placeholder = ""
+  value, onChange, step = "1", className = "", placeholder = "", disabled = false
 }: {
-  value: number; onChange: (value: number) => void; step?: string; className?: string; placeholder?: string;
+  value: number; onChange: (value: number) => void; step?: string; className?: string; placeholder?: string; disabled?: boolean;
 }) => {
   const [localValue, setLocalValue] = useState<string>(formatNumericValue(value));
   useEffect(() => { setLocalValue(formatNumericValue(value)); }, [value]);
@@ -178,7 +244,7 @@ const NumericInput = ({
     if (parsed !== null) { onChange(parsed); setLocalValue(formatNumericValue(parsed)); }
     else if (localValue === "" || localValue === "-") { onChange(0); setLocalValue("0"); }
   };
-  return <Input type="text" inputMode="decimal" value={localValue} onChange={handleChange} onBlur={handleBlur} className={className} placeholder={placeholder} />;
+  return <Input type="text" inputMode="decimal" value={localValue} onChange={handleChange} onBlur={handleBlur} className={className} placeholder={placeholder} disabled={disabled} />;
 };
 
 const RiskSettingsPanel = ({ mode, onUpdate }: { mode: TradingModeConfig; onUpdate: (u: Partial<TradingModeConfig>) => void }) => {
@@ -406,6 +472,16 @@ const BrokerConfigPanel = ({ mode, onUpdate }: { mode: TradingModeConfig; onUpda
           fixPassword: mode.fixPassword,
           fixSslEnabled: mode.fixSslEnabled,
         };
+      } else if (mode.brokerType === "dex") {
+        connectionData = {
+          ...connectionData,
+          dexChain: mode.dexChain,
+          dexExchange: mode.dexExchange,
+          dexWalletAddress: mode.dexWalletAddress,
+          dexPrivateKey: mode.dexPrivateKey,
+          dexSlippage: mode.dexSlippage,
+          dexPriorityFee: mode.dexPriorityFee,
+        };
       }
 
       const result = await apiService.testBrokerConnection(connectionData);
@@ -546,6 +622,145 @@ const BrokerConfigPanel = ({ mode, onUpdate }: { mode: TradingModeConfig; onUpda
             <><CheckCircle2 className="w-3 h-3 mr-2" /> FIX Connected</>
           ) : (
             <>Test FIX Connection</>
+          )}
+        </Button>
+      </div>
+    );
+  }
+
+  if (mode.brokerType === "dex") {
+    return (
+      <div className="p-3 bg-secondary/30 rounded space-y-3 border border-border">
+        <h5 className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1">
+          <Globe className="w-3 h-3 text-primary" /> DEX (Decentralized Exchange) Config
+        </h5>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label className="text-[10px]">Blockchain Network</Label>
+            <Select value={mode.dexChain} onValueChange={(v) => {
+              const options = mode.mode === "futures" ? (DEX_PERP_EXCHANGES[v] || []) : (DEX_EXCHANGES[v] || []);
+              onUpdate({ dexChain: v, dexExchange: options[0]?.value || "" });
+            }}>
+              <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select Chain" /></SelectTrigger>
+              <SelectContent>
+                {DEX_CHAINS.filter(chain => {
+                  if (mode.mode === "futures") return !!DEX_PERP_EXCHANGES[chain.value];
+                  return !!DEX_EXCHANGES[chain.value];
+                }).map(chain => (
+                  <SelectItem key={chain.value} value={chain.value}>{chain.icon} {chain.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1">
+            <Label className="text-[10px]">{mode.mode === "futures" ? "Perpetual DEX" : "DEX Protocol"}</Label>
+            <Select value={mode.dexExchange} onValueChange={(v) => onUpdate({ dexExchange: v })}>
+              <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select Protocol" /></SelectTrigger>
+              <SelectContent>
+                {(mode.mode === "futures" ? (DEX_PERP_EXCHANGES[mode.dexChain] || []) : (DEX_EXCHANGES[mode.dexChain] || [])).map(dex => (
+                  <SelectItem key={dex.value} value={dex.value}>{dex.icon} {dex.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="space-y-1">
+          <Label className="text-[10px]">Wallet Public Address</Label>
+          <Input
+            className="h-8 text-xs font-mono"
+            value={mode.dexWalletAddress}
+            onChange={e => onUpdate({ dexWalletAddress: e.target.value })}
+            placeholder="0x... or Solana Address"
+          />
+        </div>
+
+        <div className="space-y-1">
+          <Label className="text-[10px]">Encrypted Private Key / Seed</Label>
+          <div className="relative">
+            <Input
+              type="password"
+              className="h-8 text-xs font-mono pr-10"
+              value={mode.dexPrivateKey}
+              onChange={e => onUpdate({ dexPrivateKey: e.target.value })}
+              placeholder="Private Key (Keep safe!)"
+            />
+            <ShieldCheck className="absolute right-3 top-2 w-4 h-4 text-muted-foreground opacity-50" />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <Label className="text-[10px]">Max Slippage (%)</Label>
+              <div className="flex items-center gap-1">
+                <Switch
+                  checked={mode.dexAutoSlippage}
+                  onCheckedChange={v => onUpdate({ dexAutoSlippage: v })}
+                  className="scale-50 origin-right"
+                />
+                <span className="text-[8px] font-bold uppercase text-accent">Auto</span>
+              </div>
+            </div>
+            <div className="relative group">
+              <NumericInput
+                value={mode.dexSlippage}
+                onChange={v => onUpdate({ dexSlippage: v })}
+                className={`h-8 text-right font-mono text-xs pr-8 ${mode.dexAutoSlippage ? 'bg-secondary/20 opacity-50 cursor-not-allowed' : ''}`}
+                disabled={mode.dexAutoSlippage}
+              />
+              <span className="absolute right-2 top-2 text-[9px] font-bold text-muted-foreground">%</span>
+              {mode.dexAutoSlippage && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <Badge variant="outline" className="h-4 text-[7px] bg-accent/10 border-accent/20 text-accent">DYNAMIC</Badge>
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <Label className="text-[10px]">Priority Fee (Tip)</Label>
+              <div className="flex items-center gap-1">
+                <Switch
+                  checked={mode.dexAutoPriorityFee}
+                  onCheckedChange={v => onUpdate({ dexAutoPriorityFee: v })}
+                  className="scale-50 origin-right"
+                />
+                <span className="text-[8px] font-bold uppercase text-accent">Auto</span>
+              </div>
+            </div>
+            <div className="relative group">
+              <NumericInput
+                value={mode.dexPriorityFee}
+                onChange={v => onUpdate({ dexPriorityFee: v })}
+                className={`h-8 text-right font-mono text-xs pr-10 ${mode.dexAutoPriorityFee ? 'bg-secondary/20 opacity-50 cursor-not-allowed' : ''}`}
+                disabled={mode.dexAutoPriorityFee}
+              />
+              <span className="absolute right-2 top-2 text-[8px] font-bold text-muted-foreground">Native</span>
+              {mode.dexAutoPriorityFee && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <Badge variant="outline" className="h-4 text-[7px] bg-accent/10 border-accent/20 text-accent">OPTIMIZED</Badge>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <Button
+          size="sm"
+          variant={mode.brokerConnected ? "default" : "outline"}
+          className={`w-full h-8 text-xs ${mode.brokerConnected ? 'bg-success hover:bg-success/90' : ''}`}
+          onClick={handleTestConnection}
+          disabled={testing || !mode.dexWalletAddress || !mode.dexPrivateKey}
+        >
+          {testing ? (
+            <><RefreshCw className="w-3 h-3 mr-2 animate-spin" /> Verifying Wallet...</>
+          ) : mode.brokerConnected ? (
+            <><CheckCircle2 className="w-3 h-3 mr-2" /> Wallet Connected</>
+          ) : (
+            <>Sync Wallet & Test Connection</>
           )}
         </Button>
       </div>
@@ -857,6 +1072,8 @@ const Settings = () => {
         apiKey: "", apiSecret: "", passphrase: "", testnet: true, brokerConnected: false, mtType: "", mtServer: "", mtLogin: "",
         mtPassword: "", mtAccountType: "demo", mtBroker: "", fixSenderCompId: "", fixTargetCompId: "", fixHost: "", fixPort: 443,
         fixUsername: "", fixPassword: "", fixHeartbeatInterval: 30, fixResetOnLogon: true, fixSslEnabled: true,
+        dexChain: "solana", dexExchange: "jupiter", dexWalletAddress: "", dexPrivateKey: "", dexSlippage: 0.5, dexPriorityFee: 0.0001,
+        dexAutoSlippage: true, dexAutoPriorityFee: true,
         timeEntryEnabled: false, entryStartTime: "00:00", entryEndTime: "23:59",
         useMultiTf: false, confirmationTimeframes: ["H1", "H4", "D1"],
       },
@@ -963,8 +1180,11 @@ const Settings = () => {
       breakEvenOnProfit: true, liquidationAlert: type === "futures" ? 80 : 0, fixedRiskPerTrade: 2.0, fixedMaxDrawdown: 20, riskRewardRatio: 2.0,
       fixedLotSize: type === "spot" ? 0.01 : 0.1, maxOpenPositions: type === "spot" ? 5 : 3, brokerType: "crypto_exchange", exchange: "binance",
       endpoint: type === "spot" ? "https://api.binance.com" : "https://fapi.binance.com", apiKey: "", apiSecret: "", passphrase: "", testnet: true,
-      brokerConnected: false, mtType: "", mtServer: "", mtLogin: "", mtPassword: "", mtAccountType: "demo", mtBroker: "", fixSenderCompId: "",
+      brokerConnected: false, mtType: "", mtServer: "", mtLogin: "",
+      mtPassword: "", mtAccountType: "demo", mtBroker: "", fixSenderCompId: "",
       fixTargetCompId: "", fixHost: "", fixPort: 443, fixUsername: "", fixPassword: "", fixHeartbeatInterval: 30, fixResetOnLogon: true, fixSslEnabled: true,
+      dexChain: "solana", dexExchange: "jupiter", dexWalletAddress: "", dexPrivateKey: "", dexSlippage: 0.5, dexPriorityFee: 0.0001,
+      dexAutoSlippage: true, dexAutoPriorityFee: true,
       timeEntryEnabled: false, entryStartTime: "00:00", entryEndTime: "23:59",
       useMultiTf: false, confirmationTimeframes: ["H1", "H4"],
     };
@@ -1232,6 +1452,7 @@ const Settings = () => {
                             <SelectItem value="crypto_exchange">Crypto Exchange</SelectItem>
                             <SelectItem value="metatrader">MetaTrader</SelectItem>
                             <SelectItem value="fix">FIX Protocol</SelectItem>
+                            <SelectItem value="dex">DEX (Wallet Connect)</SelectItem>
                             <SelectItem value="none">None</SelectItem>
                           </SelectContent>
                         </Select>
@@ -1265,6 +1486,30 @@ const Settings = () => {
                         </div>
                         <Button variant="ghost" size="sm" onClick={() => removeMode(mode.id)}><AlertTriangle className="w-4 h-4 text-destructive" /></Button>
                       </div>
+
+                      {/* Broker Type Selection for Futures */}
+                      <div className="mb-4 space-y-2">
+                        <Label className="text-xs">Broker Configuration</Label>
+                        <Select value={mode.brokerType} onValueChange={(v) => {
+                          const isDex = v === "dex";
+                          handleUpdateMode(mode.id, {
+                            brokerType: v as any,
+                            brokerConnected: false,
+                            dexChain: isDex ? "solana" : mode.dexChain,
+                            dexExchange: isDex ? "drift" : mode.dexExchange
+                          });
+                        }}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="crypto_exchange">Crypto Exchange</SelectItem>
+                            <SelectItem value="fix">FIX Protocol</SelectItem>
+                            <SelectItem value="dex">Perp DEX (Hyperliquid/Drift/GMX)</SelectItem>
+                            <SelectItem value="none">None</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <BrokerConfigPanel mode={mode} onUpdate={(u) => handleUpdateMode(mode.id, u)} />
+                      </div>
+
                       <div className="mb-4 grid grid-cols-2 gap-2">
                         <div className="col-span-2">
                           <Label className="text-xs">Instrument</Label>

@@ -1,6 +1,11 @@
 """
 Trading Orchestrator
 Unified orchestration layer connecting all trading components.
+
+Integrated with:
+- Mode Controller (centralized mode switching)
+- Strategy Router (mode-aware signal routing)
+- Agent Orchestrator (AI agent lifecycle management)
 """
 import numpy as np
 import pandas as pd
@@ -58,13 +63,18 @@ class TradingOrchestrator:
         self.config = config or {}
         self.state = OrchestratorState.STOPPED
         
-        # Components (lazy initialization)
+        # Core Components (lazy initialization)
         self._data_feed = None
         self._signal_engine = None
         self._execution_gate = None
         self._risk_engine = None
         self._execution_engine = None
         self._account_manager = None
+        
+        # AI Agent Components
+        self._mode_controller = None
+        self._strategy_router = None
+        self._agent_orchestrator = None
         
         # Trading configuration
         self.symbols: List[str] = self.config.get('symbols', [])
@@ -91,7 +101,7 @@ class TradingOrchestrator:
     # ========================
     
     def _init_components(self):
-        """Initialize all components."""
+        """Initialize all components including AI agent layer."""
         try:
             # Data Feed
             from core.realtime_data_feed import get_data_feed
@@ -117,12 +127,44 @@ class TradingOrchestrator:
             from core.multi_account_manager import get_multi_account_manager
             self._account_manager = get_multi_account_manager()
             
-            logger.success("All trading components initialized")
-            return True
+            logger.success("All core trading components initialized")
             
         except Exception as e:
-            logger.error(f"Failed to initialize components: {e}")
+            logger.error(f"Failed to initialize core components: {e}")
             return False
+        
+        # Initialize AI Agent Layer (non-fatal if fails)
+        try:
+            # Mode Controller
+            from core.mode_controller import get_mode_controller
+            self._mode_controller = get_mode_controller()
+            
+            # Strategy Router
+            from router.strategy_router import StrategyRouter
+            self._strategy_router = StrategyRouter()
+            
+            # Agent Orchestrator
+            from agent.agent_orchestrator import get_agent_orchestrator
+            self._agent_orchestrator = get_agent_orchestrator(
+                risk_engine=self._risk_engine
+            )
+            
+            # Register mode change callback
+            self._mode_controller.on_mode_change(self._on_mode_changed)
+            self._mode_controller.on_emergency_revert(self._on_emergency)
+            
+            # Start agent monitoring
+            self._agent_orchestrator.start_monitoring()
+            
+            logger.success("AI Agent layer initialized")
+            
+        except Exception as e:
+            logger.warning(f"AI Agent layer not available (non-fatal): {e}")
+            self._mode_controller = None
+            self._strategy_router = None
+            self._agent_orchestrator = None
+        
+        return True
     
     # ========================
     # Orchestration
@@ -236,7 +278,7 @@ class TradingOrchestrator:
         logger.info("Trading loop stopped")
     
     def _process_symbol(self, symbol: str):
-        """Process a single symbol."""
+        """Process a single symbol through the full pipeline (mode-aware)."""
         try:
             # Get historical data for analysis
             loop = asyncio.new_event_loop()
@@ -256,16 +298,81 @@ class TradingOrchestrator:
                 if signal and self._current_session:
                     self._current_session.total_signals += 1
                 
+                # Route through Strategy Router (mode-aware)
+                routed_signal = signal
+                if self._strategy_router and self._mode_controller:
+                    try:
+                        # Extract rule/ML components from the generated signal
+                        rule_output = {}
+                        ml_output = {}
+                        if signal and hasattr(signal, 'signal'):
+                            rule_output = {
+                                "direction": str(signal.signal.value) if hasattr(signal.signal, 'value') else str(signal.signal),
+                                "confidence": getattr(signal, 'confidence', 0.0) / 100.0 if getattr(signal, 'confidence', 0) > 1 else getattr(signal, 'confidence', 0.0),
+                            }
+                        if signal and hasattr(signal, 'components'):
+                            for comp in getattr(signal, 'components', []):
+                                if hasattr(comp, 'source') and 'ml' in str(comp.source).lower():
+                                    ml_output = {
+                                        "probability": getattr(comp, 'confidence', 0.5) / 100.0 if getattr(comp, 'confidence', 0) > 1 else getattr(comp, 'confidence', 0.5),
+                                    }
+                        
+                        routed = self._strategy_router.route_signal(
+                            symbol=symbol,
+                            rule_output=rule_output,
+                            ml_output=ml_output,
+                            price_data=df,
+                        )
+                        if routed:
+                            routed_signal = routed
+                    except Exception as e:
+                        logger.warning(f"Strategy routing error for {symbol}: {e}")
+                
+                # Feed to Agent Orchestrator for regime detection (Mode 3+)
+                if self._agent_orchestrator and self._mode_controller:
+                    try:
+                        if self._mode_controller.is_ai_active:
+                            self._agent_orchestrator.detect_regime(
+                                price_data=df,
+                            )
+                    except Exception as e:
+                        logger.debug(f"Agent regime detection skip: {e}")
+                
                 # Notify signal callbacks
                 for callback in self._on_signal_callbacks:
                     try:
-                        callback(signal)
+                        callback(routed_signal)
                     except Exception as e:
                         logger.warning(f"Signal callback error: {e}")
                 
                 # Check if actionable signal
                 from core.signal_engine import SignalType
-                if signal.signal not in [SignalType.HOLD]:
+                is_actionable = False
+                if hasattr(routed_signal, 'signal'):
+                    is_actionable = routed_signal.signal not in [SignalType.HOLD]
+                elif isinstance(routed_signal, dict):
+                    is_actionable = routed_signal.get('action') not in ['hold', 'HOLD', None]
+                
+                if is_actionable:
+                    
+                    # Mode 4: Create trade proposal instead of executing
+                    if (self._mode_controller and self._mode_controller.is_autonomous 
+                            and self._agent_orchestrator):
+                        try:
+                            signal_dict = routed_signal if isinstance(routed_signal, dict) else {
+                                'symbol': symbol,
+                                'action': str(routed_signal.signal.value) if hasattr(routed_signal, 'signal') else 'unknown',
+                                'confidence': getattr(routed_signal, 'confidence', 0),
+                            }
+                            self._agent_orchestrator.propose_trade(
+                                symbol=symbol,
+                                rule_signal=signal_dict,
+                                ml_prediction={},
+                            )
+                            logger.info(f"Trade proposal created for {symbol} (Mode 4)")
+                        except Exception as e:
+                            logger.warning(f"Trade proposal error for {symbol}: {e}")
+                        continue  # Don't auto-execute in Mode 4
                     
                     # Get default account
                     account = self._account_manager.get_default_account()
@@ -275,7 +382,7 @@ class TradingOrchestrator:
                     # Process through execution gate
                     result = loop.run_until_complete(
                         self._execution_gate.process_signal(
-                            signal=signal,
+                            signal=routed_signal,
                             account_id=account_id,
                             exchange=exchange,
                             leverage=min(5, account.max_leverage if account else 1)
@@ -345,12 +452,44 @@ class TradingOrchestrator:
         self._on_error_callbacks.append(callback)
     
     # ========================
+    # Mode Change Handlers
+    # ========================
+    
+    def _on_mode_changed(self, old_mode: int, new_mode: int, reason: str):
+        """Handle mode change events from Mode Controller."""
+        logger.info(f"TradingOrchestrator notified: M{old_mode}→M{new_mode} ({reason})")
+        
+        # Update strategy router if available
+        if self._strategy_router:
+            try:
+                self._strategy_router.set_mode(new_mode)
+            except Exception as e:
+                logger.warning(f"Failed to update strategy router mode: {e}")
+        
+        # Update agent orchestrator if available
+        if self._agent_orchestrator:
+            try:
+                self._agent_orchestrator.switch_mode(new_mode, reason)
+            except Exception as e:
+                logger.warning(f"Failed to update agent orchestrator mode: {e}")
+    
+    def _on_emergency(self, old_mode: int, reason: str):
+        """Handle emergency revert from Mode Controller."""
+        logger.warning(f"⚠️ TradingOrchestrator: Emergency revert from M{old_mode}: {reason}")
+        
+        # Pause trading briefly
+        if self.state == OrchestratorState.RUNNING:
+            self.pause()
+            # Auto-resume after 5 seconds in safe mode
+            threading.Timer(5.0, self.resume).start()
+    
+    # ========================
     # Status & Reporting
     # ========================
     
     def get_status(self) -> Dict:
-        """Get orchestrator status."""
-        return {
+        """Get orchestrator status (includes AI agent info)."""
+        status = {
             'state': self.state.value,
             'symbols': self.symbols,
             'timeframes': self.timeframes,
@@ -366,9 +505,18 @@ class TradingOrchestrator:
                 'signal_engine': self._signal_engine is not None,
                 'execution_gate': self._execution_gate is not None,
                 'risk_engine': self._risk_engine is not None,
-                'execution_engine': self._execution_engine is not None
+                'execution_engine': self._execution_engine is not None,
+                'mode_controller': self._mode_controller is not None,
+                'strategy_router': self._strategy_router is not None,
+                'agent_orchestrator': self._agent_orchestrator is not None,
             }
         }
+        
+        # Add mode info if available
+        if self._mode_controller:
+            status['mode'] = self._mode_controller.get_status()
+        
+        return status
     
     def get_session_history(self) -> List[Dict]:
         """Get session history."""

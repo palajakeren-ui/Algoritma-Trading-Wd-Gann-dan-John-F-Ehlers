@@ -783,6 +783,15 @@ class ApiService {
     fixPort?: number;
     fixSenderCompId?: string;
     fixTargetCompId?: string;
+    fixUsername?: string;
+    fixPassword?: string;
+    fixSslEnabled?: boolean;
+    dexChain?: string;
+    dexExchange?: string;
+    dexWalletAddress?: string;
+    dexPrivateKey?: string;
+    dexSlippage?: number;
+    dexPriorityFee?: number;
   }): Promise<any> {
     return this.request<any>('/broker/test-connection', {
       method: 'POST',
@@ -1084,6 +1093,152 @@ class ApiService {
       method: 'POST',
       body: JSON.stringify({ manualLeverages }),
     });
+  }
+
+  // ============================================================================
+  // AI AGENT ORCHESTRATION ENDPOINTS
+  // ============================================================================
+
+  // --- Status & Health ---
+  async getAgentStatus(): Promise<any> {
+    return this.request<any>('/agent/status');
+  }
+
+  async listAgents(): Promise<any> {
+    return this.request<any>('/agent/agents');
+  }
+
+  // --- Mode Control ---
+  async getAgentMode(): Promise<any> {
+    return this.request<any>('/agent/mode');
+  }
+
+  async switchAgentMode(data: {
+    target_mode: number;
+    reason?: string;
+    force?: boolean;
+  }): Promise<any> {
+    return this.request<any>('/agent/mode', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async emergencyModeRevert(reason?: string): Promise<any> {
+    return this.request<any>('/agent/mode/revert', {
+      method: 'POST',
+      body: JSON.stringify({ reason: reason || 'Emergency revert via UI' }),
+    });
+  }
+
+  // --- Market Analysis (Analyst Agent) ---
+  async analyzeMarket(data: {
+    symbol: string;
+    gann_levels?: any;
+    ehlers_indicators?: any;
+    ml_predictions?: any;
+  }): Promise<any> {
+    return this.request<any>('/agent/analyze', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async explainTrade(data: {
+    signal: any;
+    components?: any;
+  }): Promise<any> {
+    return this.request<any>('/agent/explain', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async queryAgent(data: {
+    query: string;
+    context?: any;
+  }): Promise<any> {
+    return this.request<any>('/agent/query', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // --- Regime Detection (Regime Agent) ---
+  async getCurrentRegime(): Promise<any> {
+    return this.request<any>('/agent/regime');
+  }
+
+  async detectRegime(data: {
+    symbol?: string;
+    auto_switch?: boolean;
+  }): Promise<any> {
+    return this.request<any>('/agent/regime/detect', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // --- Parameter Optimization (Optimizer Agent) ---
+  async runOptimization(data?: {
+    parameters?: string[];
+    apply_results?: boolean;
+  }): Promise<any> {
+    return this.request<any>('/agent/optimize', {
+      method: 'POST',
+      body: JSON.stringify(data || {}),
+    });
+  }
+
+  async restoreOptimizationDefaults(): Promise<any> {
+    return this.request<any>('/agent/optimize/restore', {
+      method: 'POST',
+    });
+  }
+
+  // --- Trade Proposals (Mode 4) ---
+  async getTradeProposals(): Promise<any> {
+    return this.request<any>('/agent/proposals');
+  }
+
+  async getProposalHistory(limit?: number): Promise<any> {
+    return this.request<any>(`/agent/proposals/history${limit ? `?limit=${limit}` : ''}`);
+  }
+
+  async approveProposal(proposalId: string): Promise<any> {
+    return this.request<any>(`/agent/proposals/${proposalId}/approve`, {
+      method: 'POST',
+    });
+  }
+
+  async rejectProposal(proposalId: string, reason?: string): Promise<any> {
+    return this.request<any>(`/agent/proposals/${proposalId}/reject`, {
+      method: 'POST',
+      body: JSON.stringify({ reason: reason || '' }),
+    });
+  }
+
+  // --- Strategy Router ---
+  async getRouterStatus(): Promise<any> {
+    return this.request<any>('/agent/router/status');
+  }
+
+  async getRoutedSignals(limit?: number): Promise<any> {
+    return this.request<any>(`/agent/router/signals${limit ? `?limit=${limit}` : ''}`);
+  }
+
+  // --- Events & Audit Log ---
+  async getAgentEvents(limit?: number): Promise<any> {
+    return this.request<any>(`/agent/events${limit ? `?limit=${limit}` : ''}`);
+  }
+
+  async getAgentReports(agentRole: string, limit?: number): Promise<any> {
+    return this.request<any>(`/agent/reports/${agentRole}${limit ? `?limit=${limit}` : ''}`);
+  }
+
+  // --- Global Mode Config ---
+  async getGlobalModeConfig(): Promise<any> {
+    return this.request<any>('/agent/config/global_mode');
   }
 }
 

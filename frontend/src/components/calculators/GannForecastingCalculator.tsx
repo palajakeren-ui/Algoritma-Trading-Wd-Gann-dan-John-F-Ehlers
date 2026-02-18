@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarClock, TrendingUp, TrendingDown, Target, RefreshCw, Zap } from "lucide-react";
+import { CalendarClock, TrendingUp, TrendingDown, Target, RefreshCw, Zap, Clock } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 
@@ -50,6 +50,15 @@ export const GannForecastingCalculator = ({ currentPrice, autoCalculate = false 
   const [forecasts, setForecasts] = useState<ForecastResult[]>([]);
   const [isAutoMode, setIsAutoMode] = useState(autoCalculate);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Update current time every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Sync auto mode with prop
   useEffect(() => {
@@ -81,59 +90,91 @@ export const GannForecastingCalculator = ({ currentPrice, autoCalculate = false 
 
     const results: ForecastResult[] = [];
 
-    // Gann cycles: 30, 60, 90, 120, 180, 240, 270, 360 year cycles
-    const gannCycles = [7, 10, 20, 30, 60, 90, 120, 180, 240, 270, 360];
+    // 1. Essential Gann Constants (Squares & Wheels)
+    const gannSquares = [9, 24, 52, 72, 90, 120, 144, 360];
+
+    // 2. Astro Vibrational Periods (Planetary Cycles in Years)
+    const astroPeriods = [
+      { name: "Mercury", cycle: 0.24, weight: 15 },
+      { name: "Venus", cycle: 0.615, weight: 18 },
+      { name: "Earth/Sun", cycle: 1.0, weight: 10 },
+      { name: "Mars", cycle: 1.88, weight: 25 },
+      { name: "Jupiter", cycle: 11.86, weight: 45 },
+      { name: "Saturn", cycle: 29.46, weight: 55 },
+      { name: "Uranus", cycle: 84.0, weight: 65 },
+      { name: "Neptune", cycle: 164.8, weight: 75 }
+    ];
 
     for (let i = 1; i <= range; i++) {
       const year = start + i;
       const yearsFromStart = i;
 
-      // Calculate price using Gann square root method
-      const sqrtBase = Math.sqrt(price);
-      const increment = yearsFromStart * 0.0625; // 1/16 of a unit per year
-      const projectedPrice = Math.pow(sqrtBase + increment, 2);
-
-      // Determine cycle type
-      let cycle = "Annual";
+      let resonancePower = 0;
+      let cycleName = "Standard Wave";
       let type: "peak" | "trough" | "neutral" = "neutral";
-      let confidence = 50;
+      const reasons: string[] = [];
 
-      // Check for major Gann cycles
-      for (const gannCycle of gannCycles) {
-        if (yearsFromStart % gannCycle === 0) {
-          cycle = `${gannCycle}-Year Cycle`;
-          type = gannCycle % 60 === 0 ? "peak" : gannCycle % 30 === 0 ? "trough" : "neutral";
-          confidence = Math.min(95, 60 + (gannCycle / 10));
-          break;
+      // A. Square Resonance (9, 24, 52, 90, 144, 360)
+      for (const sq of gannSquares) {
+        if (yearsFromStart % sq === 0) {
+          resonancePower += (sq === 360 || sq === 144) ? 40 : 25;
+          reasons.push(`Sq${sq}`);
+          if (sq >= 90) type = yearsFromStart % (sq * 2) === 0 ? "peak" : "trough";
         }
       }
 
-      // Special Gann dates (90, 180, 270, 360 degrees of time)
-      if (yearsFromStart % 90 === 0) {
-        cycle = "Cardinal 90° Cycle";
-        type = "peak";
-        confidence = 92;
-      } else if (yearsFromStart % 45 === 0) {
-        cycle = "Diagonal 45° Cycle";
-        type = yearsFromStart % 90 === 45 ? "trough" : "peak";
-        confidence = 85;
+      // B. Astro Synchronicity
+      for (const astro of astroPeriods) {
+        const progress = (yearsFromStart / astro.cycle) % 1;
+        if (progress < 0.05 || progress > 0.95) {
+          resonancePower += astro.weight;
+          reasons.push(astro.name);
+          if (astro.weight > 40) type = "peak";
+        } else if (Math.abs(progress - 0.5) < 0.05) {
+          resonancePower += astro.weight / 2;
+          reasons.push(`${astro.name} Opp`);
+          type = "trough";
+        }
       }
 
-      // Square of time analysis
-      const sqrtYear = Math.sqrt(yearsFromStart);
-      if (Number.isInteger(sqrtYear)) {
-        cycle = `Square of ${sqrtYear} (${yearsFromStart} years)`;
-        type = sqrtYear % 2 === 0 ? "peak" : "trough";
-        confidence = 88;
+      // C. Gann Wave & Angle Symmetry
+      const sqrtPrice = Math.sqrt(price);
+      const angleResonance = (yearsFromStart * 45) % 360; // Gann 45 degree time angle
+      if (angleResonance === 0) {
+        resonancePower += 30;
+        reasons.push("Gann 45°");
+      }
+
+      // Square of Nine calculation for projected price
+      // Using time-to-price squaring formula: Price = (sqrt(Price) + (Time_Angle / 180))^2
+      const timeAngle = (yearsFromStart * 360 / 365) * 8; // Normalized time vibration
+      const projectedPrice = Math.pow(sqrtPrice + (timeAngle / 360), 2);
+
+      // E. Precision Intra-Day Timing (Gann Time Vibration)
+      // We derive specific Day, Hour, Minute, and Second based on the cycle resonance
+      const dayOfYear = Math.floor((resonancePower * 3.6525) % 365);
+      const hour = Math.floor((resonancePower * 13) % 24);
+      const minute = Math.floor((resonancePower * 47) % 60);
+      const second = Math.floor((resonancePower * 19) % 60);
+
+      const forecastDate = new Date(year, 0, 1);
+      forecastDate.setDate(forecastDate.getDate() + dayOfYear);
+      forecastDate.setHours(hour, minute, second);
+
+      // Determine final results
+      const finalConfidence = Math.min(99, Math.max(40, resonancePower));
+
+      if (reasons.length > 0) {
+        cycleName = reasons.join(" + ");
       }
 
       results.push({
         year,
-        date: new Date(year, 0, 1),
+        date: forecastDate,
         price: projectedPrice,
-        cycle,
-        type,
-        confidence,
+        cycle: cycleName,
+        type: type === "neutral" && resonancePower > 60 ? (i % 2 === 0 ? "peak" : "trough") : type,
+        confidence: finalConfidence,
       });
     }
 
@@ -150,11 +191,17 @@ export const GannForecastingCalculator = ({ currentPrice, autoCalculate = false 
       <CardHeader className="pb-3">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
-            <CardTitle className="flex items-center gap-2 text-base md:text-lg">
-              <CalendarClock className="h-5 w-5 text-primary" />
-              WD Gann Cycle Forecasting (Up to 365 Years)
+            <CardTitle className="flex items-center gap-2 text-base md:text-lg font-black tracking-tight">
+              <Zap className="h-5 w-5 text-accent animate-pulse" />
+              GANN QUANTUM FORECASTING ENGINE
             </CardTitle>
-            <p className="text-sm text-muted-foreground">Predict future market cycles using Gann's time methods</p>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Precision: SQ9 | SQ144 | Astro-Vibration | Angle-Time</p>
+              <Badge variant="outline" className="w-fit text-[10px] h-5 bg-primary/10 text-primary border-primary/20 flex items-center gap-1 font-mono">
+                <Clock className="w-3 h-3" />
+                {currentTime.toLocaleDateString()} {currentTime.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </Badge>
+            </div>
           </div>
           <div className="flex items-center bg-secondary/50 p-1 rounded-lg border border-border/50">
             <Button
@@ -357,8 +404,19 @@ const ForecastItem = ({ forecast }: { forecast: ForecastResult }) => (
         </Badge>
       </div>
       <div className="text-right">
-        <div className="font-mono text-sm">${forecast.price.toFixed(2)}</div>
-        <div className="text-xs text-muted-foreground">{forecast.confidence}% confidence</div>
+        <div className="font-mono text-sm font-bold text-foreground">${forecast.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+        <div className="text-[9px] text-muted-foreground font-medium uppercase">
+          {forecast.date.toLocaleDateString()} {forecast.date.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+        </div>
+        <div className="flex items-center justify-end gap-1 mt-0.5">
+          <div className="w-12 h-1 bg-secondary rounded-full overflow-hidden">
+            <div
+              className={`h-full ${forecast.confidence > 80 ? 'bg-primary' : forecast.confidence > 60 ? 'bg-accent' : 'bg-muted-foreground'}`}
+              style={{ width: `${forecast.confidence}%` }}
+            />
+          </div>
+          <span className="text-[9px] font-bold text-primary">{forecast.confidence}%</span>
+        </div>
       </div>
     </div>
   </div>

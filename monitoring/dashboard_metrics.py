@@ -2,7 +2,11 @@
 Dashboard Metrics Module
 Calculates real-time metrics for the monitoring dashboard
 """
-import psutil
+try:
+    import psutil
+    HAS_PSUTIL = True
+except ImportError:
+    HAS_PSUTIL = False
 import time
 from typing import Dict
 from datetime import datetime
@@ -15,12 +19,21 @@ class SystemMonitor:
     @staticmethod
     def get_system_stats() -> Dict:
         """Get CPU and Memory usage."""
-        return {
-            'cpu_percent': psutil.cpu_percent(interval=None),
-            'memory_percent': psutil.virtual_memory().percent,
-            'disk_usage': psutil.disk_usage('/').percent,
-            'timestamp': datetime.now().isoformat()
-        }
+        if HAS_PSUTIL:
+            return {
+                'cpu_percent': psutil.cpu_percent(interval=None),
+                'memory_percent': psutil.virtual_memory().percent,
+                'disk_usage': psutil.disk_usage('/').percent,
+                'timestamp': datetime.now().isoformat()
+            }
+        else:
+            return {
+                'cpu_percent': 0.0,
+                'memory_percent': 0.0,
+                'disk_usage': 0.0,
+                'timestamp': datetime.now().isoformat(),
+                'note': 'psutil not installed - install with: pip install psutil'
+            }
 
 
 class TradingMonitor:

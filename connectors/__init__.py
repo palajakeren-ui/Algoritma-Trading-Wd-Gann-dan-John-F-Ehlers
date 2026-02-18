@@ -34,6 +34,13 @@ from connectors.fix_connector import (
     FIXConnectorFactory
 )
 
+from connectors.dex_connector import (
+    DexConnector,
+    create_dex_connector,
+    CHAIN_CONFIG,
+    DEX_PROTOCOLS,
+)
+
 __all__ = [
     # Exchange
     'Order',
@@ -62,5 +69,11 @@ __all__ = [
     'FIXMessage',
     'FIXMsgType',
     'FIXConnector',
-    'FIXConnectorFactory'
+    'FIXConnectorFactory',
+
+    # DEX
+    'DexConnector',
+    'create_dex_connector',
+    'CHAIN_CONFIG',
+    'DEX_PROTOCOLS',
 ]

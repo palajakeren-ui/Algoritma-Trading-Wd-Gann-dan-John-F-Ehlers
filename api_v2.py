@@ -141,6 +141,14 @@ try:
 except Exception as e:
     logger.warning(f"Analytics API routes not registered: {e}")
 
+# Register Agent Orchestration API for AI agents, mode switching, and trade proposals
+try:
+    from core.agent_orchestration_api import register_agent_routes
+    register_agent_routes(app)
+    logger.info("Agent Orchestration API routes registered successfully")
+except Exception as e:
+    logger.warning(f"Agent Orchestration API routes not registered: {e}")
+
 
 # --- SocketIO for WebSocket Support ---
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')

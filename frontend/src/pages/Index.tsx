@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TrendingUp, Activity, DollarSign, Percent, Layers, RefreshCw, Wifi, Shield, Zap, Smartphone, Monitor } from "lucide-react";
+import { TrendingUp, Activity, DollarSign, Percent, Layers, RefreshCw, Wifi, Shield, Zap, Smartphone, Monitor, Clock, Target } from "lucide-react";
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ComposedChart } from "recharts";
 import { GannSquareChart } from "@/components/charts/GannSquareChart";
 import { GannWheelChart } from "@/components/charts/GannWheelChart";
@@ -23,6 +23,8 @@ import { GannDashboardExtensions } from "@/components/dashboard/GannDashboardExt
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ActiveTradingPanel } from "@/components/trading/ActiveTradingPanel";
 import Scanner from "./Scanner";
+import { GannHighLowPanel } from "@/components/dashboard/GannHighLowPanel";
+import { GannLongTermMasterCycle } from "@/components/dashboard/GannLongTermMasterCycle";
 
 
 const generateMockPriceData = (basePrice: number) => Array.from({ length: 30 }, (_, i) => {
@@ -57,6 +59,14 @@ const Index = () => {
   // Synchronization State
   const [activeSymbol, setActiveSymbol] = useState("BTC-USD");
   const [activeTimeframe, setActiveTimeframe] = useState("1d");
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Subscribe to symbol on mount or change
   useEffect(() => {
@@ -106,6 +116,8 @@ const Index = () => {
             <p className="text-sm md:text-lg text-muted-foreground font-medium flex items-center gap-2 mt-1">
               <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
               {activeSymbol} Neural-Gann Intelligence System
+              <span className="mx-2 opacity-30">|</span>
+              <span className="font-mono text-primary/80">{currentTime.toLocaleDateString()} {currentTime.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
             </p>
           </div>
         </div>
@@ -261,9 +273,16 @@ const Index = () => {
                 <p className="text-lg md:text-xl font-bold text-primary">90°</p>
               </div>
               <div className="p-3 bg-secondary/50 rounded-lg border border-border/50 flex flex-col justify-between">
-                <p className="text-xs text-muted-foreground mb-1">Signal</p>
                 <Badge className="bg-success w-fit">BULLISH</Badge>
               </div>
+            </div>
+
+            <div className="mt-6 md:mt-8">
+              <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
+                <Target className="w-4 h-4 text-primary" />
+                Gann ATH & ATL Cycle Analysis
+              </h4>
+              <GannHighLowPanel currentPrice={currentPrice} symbol={activeSymbol} />
             </div>
           </PageSection>
         </TabsContent>
@@ -391,8 +410,18 @@ const Index = () => {
           <h3 className="text-lg font-semibold text-foreground mb-4">AI-Powered WD Gann Forecasting (Real-Time)</h3>
           <AIForecastPanel currentPrice={currentPrice} />
           <div className="mt-6">
-            <h4 className="text-lg font-semibold text-foreground mb-4">WD Gann Cycle Forecasting (Up to 365 Years)</h4>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-4">
+              <h4 className="text-lg font-semibold text-foreground">WD Gann Cycle Forecasting (Up to 365 Years)</h4>
+              <Badge variant="outline" className="w-fit bg-primary/5 text-primary border-primary/20 font-mono text-xs">
+                <Clock className="w-3 h-3 mr-1" />
+                {currentTime.toLocaleDateString()} {currentTime.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </Badge>
+            </div>
             <GannForecastingCalculator />
+
+            <div className="mt-12 border-t border-border/50 pt-8">
+              <GannLongTermMasterCycle currentPrice={currentPrice} />
+            </div>
           </div>
         </TabsContent>
 

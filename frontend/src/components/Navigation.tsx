@@ -54,6 +54,7 @@ const navItems = [
       { icon: Activity, label: "Ehlers DSP", path: "/ehlers" },
       { icon: Waves, label: "Pattern Recognition", path: "/pattern-recognition" },
       { icon: Brain, label: "AI Models", path: "/ai" },
+      { icon: Activity, label: "AI Agent Monitor", path: "/ai-agent-monitor" },
       { icon: Calendar, label: "Forecasting", path: "/forecasting" },
     ]
   },

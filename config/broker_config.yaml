@@ -5,7 +5,7 @@
 # Should contain 'trading_modes' list for multi-account support.
 # ================================================================
 
-version: "3.1.0"
+version: "3.2.0"
 
 # ================================================================
 # MULTI-ACCOUNT TRADING MODES
@@ -63,6 +63,14 @@ trading_modes:
     fixHeartbeatInterval: 30
     fixResetOnLogon: true
     fixSslEnabled: true
+    dexChain: ""
+    dexExchange: ""
+    dexWalletAddress: ""
+    dexPrivateKey: ""
+    dexSlippage: 0.5
+    dexPriorityFee: 0.0001
+    dexAutoSlippage: true
+    dexAutoPriorityFee: true
     timeEntryEnabled: false
     entryStartTime: "00:00"
     entryEndTime: "23:59"
@@ -124,6 +132,14 @@ trading_modes:
     fixHeartbeatInterval: 30
     fixResetOnLogon: true
     fixSslEnabled: true
+    dexChain: ""
+    dexExchange: ""
+    dexWalletAddress: ""
+    dexPrivateKey: ""
+    dexSlippage: 0.5
+    dexPriorityFee: 0.0001
+    dexAutoSlippage: true
+    dexAutoPriorityFee: true
     timeEntryEnabled: false
     entryStartTime: "00:00"
     entryEndTime: "23:59"

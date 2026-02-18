@@ -5,7 +5,7 @@ Strategy based on Gann angles and Square of 9
 import pandas as pd
 from typing import Dict, List
 from .base_strategy import BaseStrategy
-from indicators.gann_indicators import square_of_nine
+from modules.gann.square_of_9 import SquareOf9
 from loguru import logger
 
 
@@ -26,12 +26,17 @@ class GannStrategy(BaseStrategy):
             current_price = float(df['close'].iloc[-1])
             prev_price = float(df['close'].iloc[-2])
             
-            # Get key levels
-            levels = square_of_nine(current_price)
+            # Get key levels from Square of 9
+            sq9 = SquareOf9(initial_price=current_price)
+            gann_levels = sq9.get_levels(n_levels=3)
+            levels = gann_levels['support'] + gann_levels['resistance']
+            
+            if not levels:
+                continue
             
             # Check for bounce off support or rejection at resistance
             nearest_level = min(levels, key=lambda x: abs(x - current_price))
-            pct_diff = abs(current_price - nearest_level) / nearest_level
+            pct_diff = abs(current_price - nearest_level) / nearest_level if nearest_level > 0 else 1.0
             
             if pct_diff <= self.tolerance:
                 # Potential interaction
