@@ -45,6 +45,37 @@ cp .env.example .env
 # Edit .env with your credentials if needed
 ```
 
+### Production Deployment
+```bash
+# 1. Python Backend
+pip install -r requirements.txt
+cd cython_compute && python setup.py build_ext --inplace  # Optional: Cython
+python api_v2.py  # Port 5000
+
+# 2. Frontend
+cd frontend && npm install && npm run build  # Static files
+
+# 3. Rust Gateway (optional: production exchange connection)
+cd rust_engine && cargo build --release
+
+# 4. Go Orchestrator (optional: authoritative state engine)
+cd go_api && go build -o orchestrator ./cmd/orchestrator
+
+## ⚡ QUICK START
+
+```bash
+# Backend
+cd gann_quant_ai
+pip install -r requirements.txt
+python api_v2.py
+
+# Frontend
+cd frontend && npm install && npm run dev
+# Open → http://localhost:5173
+
+# Optional: Cython acceleration
+cd cython_compute && python setup.py build_ext --inplace
+
 **2. Frontend (Node.js)**
 ```bash
 # Navigate to the frontend directory
@@ -438,21 +469,7 @@ frontend/dist/    # ← EXCLUDED
 *.h5, *.pkl       # ← EXCLUDED (large model files)
 ```
 
-### Production Deployment
-```bash
-# 1. Python Backend
-pip install -r requirements.txt
-cd cython_compute && python setup.py build_ext --inplace  # Optional: Cython
-python api_v2.py  # Port 5000
 
-# 2. Frontend
-cd frontend && npm install && npm run build  # Static files
-
-# 3. Rust Gateway (optional: production exchange connection)
-cd rust_engine && cargo build --release
-
-# 4. Go Orchestrator (optional: authoritative state engine)
-cd go_api && go build -o orchestrator ./cmd/orchestrator
 ```
 
 ---
@@ -507,20 +524,7 @@ cd go_api && go build -o orchestrator ./cmd/orchestrator
 
 ---
 
-## ⚡ QUICK START
 
-```bash
-# Backend
-cd gann_quant_ai
-pip install -r requirements.txt
-python api_v2.py
-
-# Frontend
-cd frontend && npm install && npm run dev
-# Open → http://localhost:5173
-
-# Optional: Cython acceleration
-cd cython_compute && python setup.py build_ext --inplace
 ```
 
 ---
