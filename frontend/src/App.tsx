@@ -38,6 +38,7 @@ const MultiBrokerAnalysis = lazy(() => import("./pages/MultiBrokerAnalysis"));
 const OpenTerminal = lazy(() => import("./pages/OpenTerminal"));
 const Bookmap = lazy(() => import("./pages/Bookmap"));
 const AIAgentMonitor = lazy(() => import("./pages/AIAgentMonitor"));
+const TradingMode = lazy(() => import("./pages/TradingMode"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -80,6 +81,7 @@ const App = () => (
                         <Route path="/bookmap" element={<ErrorBoundary fallbackTitle="Bookmap error"><Bookmap /></ErrorBoundary>} />
                         <Route path="/ai-agent-monitor" element={<ErrorBoundary fallbackTitle="AI Agent Monitor error"><AIAgentMonitor /></ErrorBoundary>} />
                         <Route path="/settings" element={<ErrorBoundary fallbackTitle="Settings error"><Settings /></ErrorBoundary>} />
+                        <Route path="/trading-mode" element={<ErrorBoundary fallbackTitle="Trading Mode error"><TradingMode /></ErrorBoundary>} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>
                     </Suspense>

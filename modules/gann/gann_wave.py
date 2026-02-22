@@ -255,11 +255,13 @@ class GannWave:
         
         # Find swing points
         swings = []
+        timestamps = df.index if isinstance(df.index, pd.DatetimeIndex) else [None] * len(df)
+        
         for i in range(2, len(df) - 2):
             if highs[i] > max(highs[i-2:i]) and highs[i] > max(highs[i+1:i+3]):
-                swings.append({'index': i, 'type': 'high', 'price': float(highs[i])})
+                swings.append({'index': i, 'type': 'high', 'price': float(highs[i]), 'date': timestamps[i]})
             if lows[i] < min(lows[i-2:i]) and lows[i] < min(lows[i+1:i+3]):
-                swings.append({'index': i, 'type': 'low', 'price': float(lows[i])})
+                swings.append({'index': i, 'type': 'low', 'price': float(lows[i]), 'date': timestamps[i]})
         
         swings.sort(key=lambda x: x['index'])
         
@@ -284,6 +286,7 @@ class GannWave:
                     'end_idx': s2['index'],
                     'start_price': s1['price'],
                     'end_price': s2['price'],
+                    'end_date': s2['date'],
                     'direction': 'up' if s2['price'] > s1['price'] else 'down',
                     'size_pct': round(wave_pct * 100, 2),
                     'bars': bars,
@@ -394,5 +397,5 @@ class GannWave:
             1.0: "1x1",
             0.5: "1x2", 1/3: "1x3", 0.25: "1x4", 0.125: "1x8", 0.0625: "1x16",
         }
-        closest = min(ratio_to_name.keys(), key=lambda x: abs(x - ratio))
-        return ratio_to_name[closest]
+        closest_key = min(ratio_to_name.keys(), key=lambda k: abs(k - ratio))
+        return ratio_to_name[closest_key]

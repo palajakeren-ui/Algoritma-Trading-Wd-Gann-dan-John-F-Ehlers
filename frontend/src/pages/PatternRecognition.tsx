@@ -642,7 +642,11 @@ const PatternRecognition = () => {
 
               {/* Wave Analysis Tab */}
               <TabsContent value="waves" className="mt-6">
-                <WaveAnalysisTabs currentPrice={currentPrice} candleData={candleDataWithIndicators} />
+                <WaveAnalysisTabs
+                  currentPrice={currentPrice}
+                  candleData={candleDataWithIndicators}
+                  symbol={selectedInstrument}
+                />
               </TabsContent>
 
               {/* Gann Supply & Demand Tab */}

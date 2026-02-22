@@ -155,11 +155,20 @@ def register_api_routes():
     print("\n[3/4] Registering API routes...")
     
     routes = [
-        '/api/ai/*         - AI Engine (signals, training)',
-        '/api/settings/*   - Settings & Accounts',
-        '/api/market/*     - Real-Time Data Feed',
-        '/api/execution/*  - Order Execution',
-        '/api/trading/*    - Orchestrator & Journal',
+        '/api/sync/*          - Frontend-Backend Sync (27 routes)',
+        '/api/ai/*            - AI Engine (signals, training)',
+        '/api/settings/*      - Settings & Accounts',
+        '/api/market-data/*   - Real-Time Data Feed',
+        '/api/execution/*     - Order Execution',
+        '/api/trading/*       - Orchestrator & Journal',
+        '/api/config/*        - YAML Config Sync',
+        '/api/hft/*           - High-Frequency Trading',
+        '/api/broker/*        - Broker & ML Training',
+        '/api/safety/*        - Kill Switch & Safety',
+        '/api/bookmap/*       - Bookmap & Terminal',
+        '/api/analytics/*     - Scanner, Forecast, Cycles, Options',
+        '/api/agents/*        - AI Agent Orchestration',
+        '/api/v2/* (inline)   - Core Routes (health, backtest, signals)',
     ]
     
     for route in routes:

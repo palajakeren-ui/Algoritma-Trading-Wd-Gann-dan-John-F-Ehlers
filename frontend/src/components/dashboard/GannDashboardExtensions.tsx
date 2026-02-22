@@ -42,6 +42,15 @@ export const GannDashboardExtensions = ({ currentPrice }: GannDashboardExtension
         setRotationAngle(prev => (prev + 5) % 360);
     }, [currentPrice]);
 
+    const getTimeRemaining = (targetDate: string) => {
+        const total = Date.parse(targetDate) - Date.now();
+        if (total <= 0) return "Active Now";
+        const minutes = Math.floor((total / 1000 / 60) % 60);
+        const hours = Math.floor((total / (1000 * 60 * 60)) % 24);
+        const days = Math.floor(total / (1000 * 60 * 60 * 24));
+        return `${days}h ${hours}j ${minutes}m`; // Using Indonesian labels as requested or context suggests
+    };
+
     const constants = [
         { id: "24.52", label: "Vibration 24.52", value: 24.52, type: "Frequency" },
         { id: "90", label: "Cardinal 90", value: 90, type: "Angle" },
@@ -345,7 +354,7 @@ export const GannDashboardExtensions = ({ currentPrice }: GannDashboardExtension
                                     </div>
                                     <Progress value={cycle.progress} className="h-1 bg-secondary/30" />
                                     <div className="flex justify-between items-center text-[9px] text-muted-foreground">
-                                        <span>Proximity Analysis</span>
+                                        <span>Countdown: {getTimeRemaining(cycle.date)}</span>
                                         <Badge variant="outline" className="h-4 text-[8px] border-warning/30 text-warning">{cycle.status}</Badge>
                                     </div>
                                 </div>

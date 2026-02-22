@@ -36,13 +36,58 @@ export const calculateGannSquareByConstant = (price: number, constant: number) =
 // Gann Angles Calculator
 export const calculateGannAngles = (price: number, timeUnit: number = 1) => {
   return {
+    "16x1": price + (timeUnit * 16),
+    "8x1": price + (timeUnit * 8),
+    "4x1": price + (timeUnit * 4),
+    "3x1": price + (timeUnit * 3),
+    "2x1": price + (timeUnit * 2),
     "1x1": price,
     "1x2": price + (timeUnit * 0.5),
+    "1x3": price + (timeUnit * 0.333),
     "1x4": price + (timeUnit * 0.25),
     "1x8": price + (timeUnit * 0.125),
-    "2x1": price + (timeUnit * 2),
-    "4x1": price + (timeUnit * 4),
-    "8x1": price + (timeUnit * 8),
+    "1x16": price + (timeUnit * 0.0625),
+  };
+};
+
+// Elliott Wave Projection Logic (Basic 5-wave motive pattern)
+export const calculateElliottWave = (low: number, high: number) => {
+  const diff = high - low;
+  return {
+    wave1: high,
+    wave2: high - (diff * 0.618),
+    wave3: high + (diff * 1.618),
+    wave4: high + (diff * 1.618) - (diff * 0.382),
+    wave5: high + (diff * 1.618) + (diff * 0.618),
+  };
+};
+
+// Gann Wave / ZigZag Logic is usually reactive, so we'll handle the point identification in the chart component
+// but we'll provide a threshold helper here.
+export const getWaveThreshold = (price: number) => price * 0.02; // 2% reversal threshold
+
+// Specific Gann Squares (24.52, 90, 360)
+export const calculateGannSquareByType = (price: number, type: 24.52 | 90 | 360) => {
+  const sqrtPrice = Math.sqrt(price);
+  const angles = [0, 45, 90, 135, 180, 225, 270, 315, 360];
+  const results: Record<string, number> = {};
+
+  angles.forEach(angle => {
+    // Step calculation based on Gann Circle of degrees
+    const step = (angle / 360) * (type / price > 1 ? 0.125 : 2); // Heuristic scaling
+    results[`S${type}_${angle}°`] = Math.pow(sqrtPrice + step, 2);
+  });
+
+  return results;
+};
+
+// Gann Astrology Vibration (stub logic based on planetary positions)
+export const calculateGannAstroVibration = (price: number) => {
+  return {
+    "Mars Vibration": price * 1.0125,
+    "Jupiter Confluence": price * 1.0318,
+    "Saturn Support": price * 0.968,
+    "Lunar Node": price * 1.005
   };
 };
 

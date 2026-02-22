@@ -25,6 +25,7 @@ import { ActiveTradingPanel } from "@/components/trading/ActiveTradingPanel";
 import Scanner from "./Scanner";
 import { GannHighLowPanel } from "@/components/dashboard/GannHighLowPanel";
 import { GannLongTermMasterCycle } from "@/components/dashboard/GannLongTermMasterCycle";
+import { WaveAnalysisTabs } from "@/components/pattern/WaveAnalysisTabs";
 
 
 const generateMockPriceData = (basePrice: number) => Array.from({ length: 30 }, (_, i) => {
@@ -185,6 +186,19 @@ const Index = () => {
         }
       >
         <GannDashboardExtensions currentPrice={currentPrice} />
+      </PageSection>
+
+      <PageSection
+        title="Gann & Elliott Wave Analysis"
+        icon={<TrendingUp className="w-5 h-5 text-primary" />}
+        headerAction={
+          <Badge className="bg-primary/20 text-primary border-primary/30 flex items-center gap-1">
+            <Activity className="w-3 h-3" />
+            {!isMobile && "WAVE PROJECTION ACTIVE"}
+          </Badge>
+        }
+      >
+        <WaveAnalysisTabs currentPrice={currentPrice} candleData={currentCandles} symbol={activeSymbol} />
       </PageSection>
 
       <PageSection

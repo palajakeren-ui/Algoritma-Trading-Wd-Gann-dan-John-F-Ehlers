@@ -9,9 +9,13 @@ from loguru import logger
 from datetime import datetime, timedelta
 from typing import Dict, Any, List
 import numpy as np
+import pandas as pd
 import random
 import math
 import os
+
+from modules.forecasting.gann_wave_projection import GannWaveAnalyzer
+from modules.forecasting.elliott_wave_projection import ElliottWaveAnalyzer
 
 analytics_api = Blueprint('analytics_api', __name__)
 
@@ -179,49 +183,38 @@ def forecast_daily():
 
 @analytics_api.route('/forecast/waves', methods=['POST'])
 def forecast_waves():
-    """Generate Elliott/Gann wave forecast."""
+    """Generate Elliott/Gann wave forecast using production engines."""
     try:
         data = request.get_json(silent=True) or {}
         symbol = data.get('symbol', 'BTCUSDT')
-        price = _get_current_price(symbol)
-
-        elliott_waves = []
-        gann_waves = []
-        wp = price
-        for i in range(1, 6):
-            direction = 1 if i % 2 == 1 else -1
-            magnitude = random.uniform(0.02, 0.08)
-            target = round(wp * (1 + direction * magnitude), 2)
-            elliott_waves.append({
-                "wave": i,
-                "type": "impulse" if i % 2 == 1 else "corrective",
-                "startPrice": wp,
-                "targetPrice": target,
-                "confidence": round(random.uniform(0.55, 0.85), 4),
-                "status": "completed" if i <= 2 else ("in_progress" if i == 3 else "projected")
-            })
-            wp = target
-
-        gp = price
-        for i in range(1, 4):
-            target = round(gp * (1 + random.uniform(-0.05, 0.08)), 2)
-            gann_waves.append({
-                "cycle": f"Gann Cycle {i}",
-                "period_days": random.choice([90, 120, 144, 180]),
-                "startPrice": gp,
-                "targetPrice": target,
-                "nextTurnDate": (datetime.now() + timedelta(days=random.randint(15, 90))).strftime("%Y-%m-%d"),
-                "confidence": round(random.uniform(0.50, 0.80), 4)
-            })
-            gp = target
-
+        
+        # Get historical data for analysis
+        ohlcv_list = _generate_sample_ohlcv(symbol, days=300)
+        df = pd.DataFrame(ohlcv_list)
+        df['timestamp'] = pd.to_datetime(df['timestamp'])
+        df.set_index('timestamp', inplace=True)
+        
+        # Initialize analyzers
+        gann_analyzer = GannWaveAnalyzer()
+        elliott_analyzer = ElliottWaveAnalyzer()
+        
+        # Run analysis
+        gann_results = gann_analyzer.analyze(df)
+        elliott_results = elliott_analyzer.analyze(df)
+        
+        # Calculate overall bias
+        bias = "NEUTRAL"
+        if elliott_results.get("status") == "success":
+            bias = elliott_results.get("trend", "NEUTRAL").upper()
+        
         return jsonify({
             "symbol": symbol,
-            "currentPrice": price,
-            "elliottWaves": elliott_waves,
-            "gannWaves": gann_waves,
-            "currentWavePosition": "Wave 3 (Impulse)",
-            "overallBias": random.choice(["BULLISH", "BEARISH", "NEUTRAL"]),
+            "currentPrice": float(df.iloc[-1]['close']),
+            "gannAnalysis": gann_results,
+            "elliottAnalysis": elliott_results,
+            "currentWavePosition": elliott_results.get("current_wave", "Unknown"),
+            "overallBias": bias,
+            "status": "success",
             "timestamp": datetime.now().isoformat()
         })
     except Exception as e:
