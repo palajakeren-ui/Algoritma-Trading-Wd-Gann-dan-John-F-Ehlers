@@ -1,2 +1,108 @@
-node_modules/
+# ============================================================================
+# CENAYANG MARKET — .gitignore
+# Institutional Trading System Repository Rules
+# ============================================================================
+
+# =========================
+# Python
+# =========================
+.venv/
+venv/
+env/
 .env
+.env.local
+.env.*.local
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyd
+*.egg-info/
+*.egg
+dist/
+build/
+*.whl
+.eggs/
+
+# Cython build artifacts
+*.c
+!rust_engine/src/*.rs
+cython_compute/*.html
+cython_compute/build/
+
+# =========================
+# Node / Frontend
+# =========================
+node_modules/
+frontend/dist/
+frontend/.vite/
+*.tsbuildinfo
+
+# =========================
+# Rust
+# =========================
+rust_engine/target/
+rust_engine/Cargo.lock
+
+# =========================
+# Go
+# =========================
+go_api/bin/
+go_api/vendor/
+
+# =========================
+# IDE / Editor
+# =========================
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================
+# OS / System
+# =========================
+.DS_Store
+*.log
+*.tmp
+*.bak
+*.orig
+
+# =========================
+# Build / Package
+# =========================
+*.tar.gz
+*.zip
+*.deb
+*.rpm
+
+# =========================
+# Data / Models (large files)
+# =========================
+*.h5
+*.hdf5
+*.pkl
+*.joblib
+*.onnx
+models/saved/
+outputs/*.csv
+outputs/*.json
+logs/*.log
+
+# =========================
+# Docker
+# =========================
+.dockerignore
+
+# =========================
+# Secrets / Credentials
+# =========================
+*.pem
+*.key
+*.crt
+*.p12
+secrets/
+credentials/
