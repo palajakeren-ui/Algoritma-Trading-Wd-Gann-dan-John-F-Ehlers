@@ -70,22 +70,12 @@ pip install -r requirements.txt
 python api_v2.py
 
 # Frontend
-cd frontend && npm install && npm run dev
+cd frontend && npm install &&npm run build && npm run start
 # Open → http://localhost:5173
 
 # Optional: Cython acceleration
 cd cython_compute && python setup.py build_ext --inplace
 
-**2. Frontend (Node.js)**
-```bash
-# Navigate to the frontend directory
-cd frontend
-
-# Install Node.js dependencies
-npm install
-
-# Return to the root directory
-cd ..
 ```
 
 ### Usage
