@@ -45,6 +45,20 @@ cp .env.example .env
 # Edit .env with your credentials if needed
 ```
 
+## 🌐 CENAYANG MARKET
+
+- **Twitter/X**: [@CenayangMarket](https://x.com/CenayangMarket)
+- **Instagram**: [@cenayang.market](https://www.instagram.com/cenayang.market)
+- **TikTok**: [@cenayang.market](https://www.tiktok.com/@cenayang.market)
+- **Facebook**: [Cenayang.Market](https://www.facebook.com/Cenayang.Market)
+- **Telegram**: [@cenayangmarket](https://t.me/cenayangmarket)
+- **Saweria**: [CenayangMarket](https://saweria.co/CenayangMarket)
+- **Trakteer**: [Cenayang.Market](https://trakteer.id/Cenayang.Market/tip)
+- **Patreon**: [Cenayangmarket](https://patreon.com/Cenayangmarket)
+
+###
+
+
 ### Production Deployment
 ```bash
 # 1. Python Backend
