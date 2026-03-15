@@ -1,0 +1,244 @@
+﻿# ================================================================
+# NOTIFIER.YAML - v3.0
+# ================================================================
+
+version: "3.0.0"
+
+# ================================================================
+# NOTIFICATION SYSTEM
+# ================================================================
+notifications:
+  enabled: true
+  priorities:
+    critical: 1
+    high: 2
+    medium: 3
+    low: 4
+    info: 5
+
+# ================================================================
+# TELEGRAM NOTIFICATIONS
+# ================================================================
+telegram:
+  enabled: true
+  priority: 1
+  bot:
+    token: "${TELEGRAM_BOT_TOKEN}"
+  recipients:
+    - chat_id: "${TELEGRAM_CHAT_ID}"
+      name: "Main Trading Channel"
+      min_priority: "medium"
+    - chat_id: "${TELEGRAM_ALERTS_CHAT_ID}"
+      name: "Alerts Only"
+      min_priority: "high"
+  format:
+    style: "markdown"
+    include_emoji: true
+  rate_limit:
+    max_per_minute: 10
+    max_per_hour: 100
+  retry:
+    enabled: true
+    max_attempts: 3
+    delay_seconds: 5
+
+# ================================================================
+# EMAIL NOTIFICATIONS
+# ================================================================
+email:
+  enabled: true
+  priority: 2
+  smtp:
+    server: "smtp.gmail.com"
+    port: 587
+    use_tls: true
+    username: "${EMAIL_USERNAME}"
+    password: "${EMAIL_PASSWORD}"
+  settings:
+    from: "${EMAIL_FROM}"
+    to: ["${EMAIL_TO}"]
+    cc: []
+    bcc: []
+  content:
+    subject_prefix: "[Gann Quant AI]"
+
+# ================================================================
+# WEBHOOK NOTIFICATIONS
+# ================================================================
+webhook:
+  enabled: true
+  priority: 3
+  endpoints:
+    - name: "trading_server"
+      url: "${WEBHOOK_URL_1}"
+      method: "POST"
+      headers:
+        Content-Type: "application/json"
+        Authorization: "Bearer ${WEBHOOK_TOKEN_1}"
+      enabled: true
+    - name: "monitoring_service"
+      url: "${WEBHOOK_URL_2}"
+      method: "POST"
+      headers:
+        Content-Type: "application/json"
+      enabled: true
+  payload:
+    format: "json"
+    fields:
+      - "timestamp"
+      - "event_type"
+      - "symbol"
+      - "data"
+      - "metadata"
+  retry:
+    enabled: true
+    max_attempts: 3
+    exponential_backoff: true
+
+# ================================================================
+# DISCORD NOTIFICATIONS
+# ================================================================
+discord:
+  enabled: false
+  priority: 3
+  webhook:
+    url: "${DISCORD_WEBHOOK_URL}"
+
+# ================================================================
+# SLACK NOTIFICATIONS
+# ================================================================
+slack:
+  enabled: false
+  priority: 3
+  bot_token: "${SLACK_BOT_TOKEN}"
+  channels:
+    - name: "#trading-signals"
+      min_priority: "medium"
+    - name: "#trading-alerts"
+      min_priority: "high"
+
+# ================================================================
+# SMS NOTIFICATIONS
+# ================================================================
+sms:
+  enabled: false
+  priority: 2
+  twilio:
+    account_sid: "${TWILIO_ACCOUNT_SID}"
+    auth_token: "${TWILIO_AUTH_TOKEN}"
+    from_number: "${TWILIO_PHONE_NUMBER}"
+  recipients:
+    - number: "${SMS_NUMBER_1}"
+      min_priority: "critical"
+  limits:
+    max_per_day: 10
+    max_length: 160
+
+# ================================================================
+# PUSH NOTIFICATIONS
+# ================================================================
+push:
+  enabled: false
+  fcm:
+    enabled: false
+    server_key: "${FCM_SERVER_KEY}"
+  onesignal:
+    enabled: false
+    app_id: "${ONESIGNAL_APP_ID}"
+    api_key: "${ONESIGNAL_API_KEY}"
+
+# ================================================================
+# NOTIFICATION EVENTS
+# ================================================================
+events:
+  trading:
+    signal_generated:
+      enabled: true
+      priority: "medium"
+      channels: ["telegram", "email"]
+    position_opened:
+      enabled: true
+      priority: "high"
+      channels: ["telegram", "webhook"]
+    position_closed:
+      enabled: true
+      priority: "medium"
+      channels: ["telegram"]
+    stop_loss_hit:
+      enabled: true
+      priority: "high"
+      channels: ["telegram", "email"]
+    take_profit_hit:
+      enabled: true
+      priority: "medium"
+      channels: ["telegram"]
+  risk:
+    daily_loss_limit:
+      enabled: true
+      priority: "critical"
+      channels: ["telegram", "email", "sms"]
+    drawdown_warning:
+      enabled: true
+      priority: "high"
+      channels: ["telegram", "email"]
+    margin_call:
+      enabled: true
+      priority: "critical"
+      channels: ["telegram", "email", "sms"]
+  system:
+    error_occurred:
+      enabled: true
+      priority: "high"
+      channels: ["telegram", "email"]
+    connection_lost:
+      enabled: true
+      priority: "critical"
+      channels: ["telegram", "sms"]
+    connection_restored:
+      enabled: true
+      priority: "medium"
+      channels: ["telegram"]
+
+# ================================================================
+# NOTIFICATION FILTERING
+# ================================================================
+filtering:
+  duplicates:
+    enabled: true
+    time_window: 300
+  rate_limiting:
+    enabled: true
+    limits:
+      per_minute: 20
+      per_hour: 200
+      per_day: 1000
+  quiet_hours:
+    enabled: false
+    start: "23:00"
+    end: "07:00"
+    timezone: "UTC"
+    allow_critical: true
+
+# ================================================================
+# LOGGING
+# ================================================================
+logging:
+  log_notifications:
+    enabled: true
+    path: "logs/notifications.log"
+  failed_delivery:
+    enabled: true
+    retry_later: true
+    alert_after_failures: 5
+
+# ================================================================
+# TESTING
+# ================================================================
+testing:
+  test_mode:
+    enabled: false
+    send_to_test_channels: true
+  test_notification:
+    enabled: true
+    schedule: "daily"
+    time: "09:00"

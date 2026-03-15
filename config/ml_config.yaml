@@ -1,0 +1,847 @@
+# ================================================================
+# GANN QUANT AI - MACHINE LEARNING CONFIGURATION v3.0
+# ================================================================
+# Deep Learning & AI models for trading predictions
+# ================================================================
+
+version: "3.0.0"
+
+# ================================================================
+# MODEL ENSEMBLE
+# ================================================================
+ensemble:
+  
+  enabled: true
+  mode: "stacking"  # voting | stacking | blending | boosting
+  
+  # Model weights
+  weights:
+    lstm_predictor: 0.30
+    transformer_trend: 0.25
+    xgboost_classifier: 0.25
+    random_forest: 0.15
+    mlp_ensemble: 0.05
+    
+  # Voting strategy
+  voting:
+    strategy: "weighted"  # soft | hard | weighted
+    min_consensus: 0.65
+    
+  # Stacking configuration
+  stacking:
+    meta_model: "xgboost"
+    use_probabilities: true
+    cv_folds: 5
+
+# ================================================================
+# LSTM PRICE PREDICTOR
+# ================================================================
+lstm:
+  
+  enabled: true
+  
+  # Model architecture
+  architecture:
+    input_shape: [60, 50]  # [sequence_length, features]
+    
+    layers:
+      - type: "lstm"
+        units: 128
+        return_sequences: true
+        dropout: 0.2
+        recurrent_dropout: 0.2
+        
+      - type: "lstm"
+        units: 64
+        return_sequences: true
+        dropout: 0.2
+        
+      - type: "lstm"
+        units: 32
+        return_sequences: false
+        dropout: 0.2
+        
+      - type: "dense"
+        units: 16
+        activation: "relu"
+        
+      - type: "dropout"
+        rate: 0.2
+        
+      - type: "dense"
+        units: 1
+        activation: "linear"
+        
+  # Training configuration
+  training:
+    optimizer: "adam"
+    learning_rate: 0.001
+    loss: "huber"  # huber | mse | mae
+    
+    batch_size: 32
+    epochs: 100
+    validation_split: 0.2
+    
+    callbacks:
+      early_stopping:
+        enabled: true
+        patience: 15
+        restore_best_weights: true
+        
+      reduce_lr:
+        enabled: true
+        factor: 0.5
+        patience: 5
+        min_lr: 0.00001
+        
+      model_checkpoint:
+        enabled: true
+        save_best_only: true
+        
+  # Data preparation
+  data:
+    sequence_length: 60
+    prediction_horizon: 1  # bars ahead
+    
+    scaling:
+      method: "minmax"  # minmax | standard | robust
+      feature_range: [0, 1]
+      
+    features:
+      - "open"
+      - "high"
+      - "low"
+      - "close"
+      - "volume"
+      - "gann_features"
+      - "ehlers_features"
+      - "technical_indicators"
+      
+  # Model paths
+  paths:
+    model: "models/lstm_price_predictor.h5"
+    weights: "models/lstm_weights.h5"
+    scaler: "models/lstm_scaler.pkl"
+
+# ================================================================
+# TRANSFORMER MODEL
+# ================================================================
+transformer:
+  
+  enabled: true
+  
+  # Architecture
+  architecture:
+    d_model: 128
+    nhead: 8
+    num_encoder_layers: 4
+    num_decoder_layers: 4
+    dim_feedforward: 512
+    dropout: 0.1
+    
+    # Positional encoding
+    positional_encoding:
+      enabled: true
+      max_len: 5000
+      
+  # Attention mechanism
+  attention:
+    type: "multi_head"
+    heads: 8
+    dropout: 0.1
+    
+  # Training
+  training:
+    optimizer: "adam"
+    learning_rate: 0.0001
+    scheduler: "warmup_cosine"
+    
+    batch_size: 64
+    epochs: 150
+    gradient_clip: 1.0
+    
+    warmup_steps: 1000
+    
+  # Specific for time series
+  time_series:
+    context_length: 100
+    prediction_length: 10
+    stride: 1
+    
+  paths:
+    model: "models/transformer_trend.pt"
+    config: "models/transformer_config.json"
+
+# ================================================================
+# XGBOOST CLASSIFIER
+# ================================================================
+xgboost:
+  
+  enabled: true
+  
+  # Model parameters
+  parameters:
+    objective: "binary:logistic"  # binary:logistic | multi:softmax
+    booster: "gbtree"  # gbtree | dart | gblinear
+    
+    # Tree parameters
+    max_depth: 7
+    min_child_weight: 3
+    subsample: 0.8
+    colsample_bytree: 0.8
+    colsample_bylevel: 0.8
+    
+    # Learning parameters
+    learning_rate: 0.05
+    n_estimators: 500
+    
+    # Regularization
+    reg_alpha: 0.1  # L1
+    reg_lambda: 1.0  # L2
+    gamma: 0.1
+    
+    # Other
+    scale_pos_weight: 1
+    max_delta_step: 0
+    
+  # Training
+  forward_validation: false
+  training:
+    early_stopping_rounds: 50
+    eval_metric: ["auc", "logloss"]
+    
+    # Cross-validation
+    cv_folds: 5
+    stratified: true
+    
+  # Feature importance
+  feature_importance:
+    enabled: true
+    method: "gain"  # gain | weight | cover
+    top_n: 30
+    
+  # Class labels
+  classes:
+    labels: [0, 1]  # 0: Sell/Neutral, 1: Buy
+    
+    # Or multi-class
+    # labels: [0, 1, 2]  # 0: Sell, 1: Neutral, 2: Buy
+    
+  paths:
+    model: "models/xgboost_classifier.json"
+    feature_names: "models/xgboost_features.json"
+
+# ================================================================
+# RANDOM FOREST
+# ================================================================
+random_forest:
+  
+  enabled: true
+  
+  # Parameters
+  parameters:
+    n_estimators: 300
+    max_depth: 20
+    min_samples_split: 10
+    min_samples_leaf: 5
+    max_features: "sqrt"  # sqrt | log2 | auto
+    
+    bootstrap: true
+    oob_score: true
+    
+    criterion: "gini"  # gini | entropy
+    
+    # Parallel processing
+    n_jobs: -1
+    random_state: 42
+    
+  # Feature selection
+  feature_selection:
+    enabled: true
+    method: "importance"
+    threshold: 0.01
+    
+  # Ensemble diversity
+  diversity:
+    max_samples: 0.8
+    random_subspace: true
+    
+  paths:
+    model: "models/random_forest.pkl"
+    feature_importance: "models/rf_importance.csv"
+
+# ================================================================
+# MLP NEURAL NETWORK
+# ================================================================
+mlp:
+  
+  enabled: true
+  
+  # Architecture
+  architecture:
+    input_dim: 50
+    
+    hidden_layers:
+      - units: 256
+        activation: "relu"
+        dropout: 0.3
+        batch_norm: true
+        
+      - units: 128
+        activation: "relu"
+        dropout: 0.3
+        batch_norm: true
+        
+      - units: 64
+        activation: "relu"
+        dropout: 0.2
+        batch_norm: true
+        
+      - units: 32
+        activation: "relu"
+        dropout: 0.2
+        
+    output_layer:
+      units: 3  # Buy, Sell, Hold
+      activation: "softmax"
+      
+  # Training
+  training:
+    optimizer: "adam"
+    learning_rate: 0.001
+    loss: "categorical_crossentropy"
+    
+    batch_size: 128
+    epochs: 200
+    
+    # Class weights for imbalanced data
+    class_weights:
+      enabled: true
+      auto_balance: true
+      
+  paths:
+    model: "models/mlp_ensemble.h5"
+
+# ================================================================
+# FEATURE ENGINEERING
+# ================================================================
+features:
+  
+  # Feature sets
+  feature_sets:
+    
+    # Technical indicators
+    technical:
+      enabled: true
+      indicators:
+        - "rsi"
+        - "macd"
+        - "bollinger_bands"
+        - "stochastic"
+        - "adx"
+        - "cci"
+        - "williams_r"
+        - "atr"
+        - "obv"
+        - "mfi"
+        
+    # Gann features
+    gann:
+      enabled: true
+      features:
+        # === GANN SQUARES ===
+        # Square of 9 (Master Calculator)
+        - "square_of_9_distance"
+        - "square_of_9_levels"
+        - "square_of_9_rotation"
+        
+        # Square of 24 (Daily Cycle)
+        - "square_of_24_distance"
+        - "square_of_24_levels"
+        
+        # Square of 52 (Weekly Cycle)
+        - "square_of_52_distance"
+        - "square_of_52_levels"
+        
+        # Square of 90 (Quarterly Cycle)
+        - "square_of_90_distance"
+        - "square_of_90_levels"
+        - "square_of_90_harmonic"
+        
+        # Square of 144 (Fibonacci Master)
+        - "square_of_144_distance"
+        - "square_of_144_levels"
+        - "square_of_144_spiral"
+        
+        # Square of 360 (Annual Cycle / Master Wheel)
+        - "square_of_360_distance"
+        - "square_of_360_levels"
+        - "square_of_360_degree"
+        
+        # === GANN FAN ANGLES ===
+        # Steep Uptrend Angles
+        - "gann_fan_16x1"
+        - "gann_fan_8x1"
+        - "gann_fan_4x1"
+        - "gann_fan_3x1"
+        - "gann_fan_2x1"
+        
+        # Balance Angle
+        - "gann_fan_1x1"
+        
+        # Steep Downtrend Angles
+        - "gann_fan_1x2"
+        - "gann_fan_1x3"
+        - "gann_fan_1x4"
+        - "gann_fan_1x8"
+        - "gann_fan_1x16"
+        
+        # Angle Position & Proximity
+        - "gann_angle_position"
+        - "cardinal_angle_proximity"
+        
+        # === TIME & CYCLE FEATURES ===
+        - "spiral_rotation"
+        - "time_cycle_phase"
+        - "wave_position"
+        - "time_price_square"
+        - "natural_vibration"
+        
+    # Ehlers features
+    ehlers:
+      enabled: true
+      features:
+        # Core MAMA/FAMA
+        - "mama_fama"
+        - "mama"
+        - "fama"
+        
+        # Transform Indicators
+        - "fisher_transform"
+        - "smoothed_rsi"
+        
+        # Smoothing Filters
+        - "super_smoother"
+        - "roofing_filter"
+        - "decycler"
+        - "bandpass_filter"
+        
+        # Cycle Indicators
+        - "cyber_cycle"
+        - "dominant_cycle_period"
+        - "sinewave_indicator"
+        
+        # Trend Indicators
+        - "instantaneous_trendline"
+        
+    # Astro features
+    astro:
+      enabled: true
+      features:
+        - "major_aspects_score"
+        - "retrograde_status"
+        - "lunar_phase"
+        - "planetary_strength"
+        - "bradley_value"
+        
+    # Market microstructure
+    microstructure:
+      enabled: true
+      features:
+        - "bid_ask_spread"
+        - "volume_profile"
+        - "order_flow_imbalance"
+        - "tape_reading_features"
+        - "large_order_detection"
+        
+    # Sentiment features
+    sentiment:
+      enabled: false  # Requires external data
+      features:
+        - "put_call_ratio"
+        - "vix_level"
+        - "news_sentiment"
+        - "social_sentiment"
+        
+    # Time features
+    time:
+      enabled: true
+      features:
+        - "hour_of_day"
+        - "day_of_week"
+        - "day_of_month"
+        - "month_of_year"
+        - "is_month_end"
+        - "session_type"
+        
+  # Feature transformations
+  transformations:
+    
+    # Lag features
+    lags:
+      enabled: true
+      periods: [1, 2, 3, 5, 10, 20]
+      
+    # Rolling statistics
+    rolling:
+      enabled: true
+      windows: [5, 10, 20, 50]
+      functions: ["mean", "std", "min", "max"]
+      
+    # Differences
+    differences:
+      enabled: true
+      orders: [1, 2]
+      
+    # Ratios
+    ratios:
+      enabled: true
+      
+    # Polynomials
+    polynomials:
+      enabled: false
+      degree: 2
+      
+  # Feature selection
+  selection:
+    enabled: true
+    
+    methods:
+      - "correlation"
+      - "mutual_information"
+      - "recursive_elimination"
+      
+    # Remove highly correlated features
+    correlation_threshold: 0.95
+    
+    # Select top K features
+    top_k: 100
+    
+  # Feature scaling
+  scaling:
+    method: "standard"  # standard | minmax | robust | none
+    per_feature: true
+
+# ================================================================
+# DATA PREPARATION
+# ================================================================
+data_preparation:
+  
+  # Train/Test split
+  split:
+    method: "time_series"  # time_series | random | stratified
+    train_size: 0.7
+    validation_size: 0.15
+    test_size: 0.15
+    
+    # Ensure no data leakage
+    gap_days: 1
+    
+  # Resampling for imbalanced data
+  resampling:
+    enabled: true
+    method: "smote"  # smote | adasyn | random_oversample | random_undersample
+    sampling_strategy: "auto"
+    
+  # Data augmentation
+  augmentation:
+    enabled: true
+    
+    techniques:
+      - "noise_injection"
+      - "time_warping"
+      - "magnitude_warping"
+      
+  # Outlier handling
+  outliers:
+    detection: "isolation_forest"  # isolation_forest | zscore | iqr
+    action: "clip"  # remove | clip | transform
+    threshold: 3.0
+
+# ================================================================
+# MODEL TRAINING
+# ================================================================
+training:
+  
+  # Training strategy
+  strategy: "walk_forward"  # walk_forward | expanding_window | sliding_window
+  
+  # Walk-forward parameters
+  walk_forward:
+    train_window: 252  # trading days (~1 year)
+    test_window: 21    # trading days (~1 month)
+    step_size: 21
+    anchored: false    # Anchored vs rolling window
+    
+  # Hyperparameter optimization
+  hyperparameter_tuning:
+    enabled: true
+    method: "optuna"  # optuna | grid_search | random_search | bayesian
+    
+    n_trials: 100
+    timeout: 3600  # seconds
+    
+    # Parameters to optimize (example for XGBoost)
+    search_space:
+      max_depth: [3, 10]
+      learning_rate: [0.01, 0.3]
+      n_estimators: [100, 1000]
+      subsample: [0.6, 1.0]
+      colsample_bytree: [0.6, 1.0]
+      
+  # Model retraining
+  retraining:
+    enabled: true
+    frequency: "weekly"  # daily | weekly | monthly
+    auto_trigger: true
+    performance_threshold: 0.05  # Retrain if performance drops 5%
+    
+  # Model versioning
+  versioning:
+    enabled: true
+    keep_last_n: 10
+    tag_with_metrics: true
+
+# ================================================================
+# MODEL EVALUATION
+# ================================================================
+evaluation:
+  
+  # Metrics
+  metrics:
+    classification:
+      - "accuracy"
+      - "precision"
+      - "recall"
+      - "f1_score"
+      - "auc_roc"
+      - "log_loss"
+      - "confusion_matrix"
+      
+    regression:
+      - "mse"
+      - "rmse"
+      - "mae"
+      - "r2_score"
+      - "mape"
+      
+    trading_specific:
+      - "directional_accuracy"
+      - "profit_factor"
+      - "sharpe_ratio"
+      - "max_drawdown"
+      
+  # Cross-validation
+  cross_validation:
+    enabled: true
+    method: "time_series_split"  # time_series_split | k_fold
+    n_splits: 5
+    
+  # Out-of-sample testing
+  oos_testing:
+    enabled: true
+    test_period: "last_3_months"
+    
+  # Performance monitoring
+  monitoring:
+    enabled: true
+    metrics_tracking: true
+    drift_detection: true
+    
+    # Model drift detection
+    drift:
+      method: "psi"  # psi | ks_test | chi_square
+      threshold: 0.2
+      alert_on_drift: true
+
+# ================================================================
+# PREDICTION & INFERENCE
+# ================================================================
+inference:
+  
+  # Prediction mode
+  mode: "ensemble"  # single | ensemble | voting
+  
+  # Confidence thresholds
+  confidence:
+    min_confidence: 0.60
+    high_confidence: 0.80
+    
+    # Action by confidence level
+    actions:
+      low: "skip"        # confidence < 0.60
+      medium: "partial"  # 0.60 - 0.80
+      high: "full"       # > 0.80
+      
+  # Prediction horizons
+  horizons:
+    short_term: 1   # 1 bar ahead
+    medium_term: 5  # 5 bars ahead
+    long_term: 20   # 20 bars ahead
+    
+  # Output format
+  output:
+    probability: true
+    class_label: true
+    confidence_score: true
+    feature_contribution: true
+    
+  # Real-time inference
+  realtime:
+    enabled: true
+    latency_target_ms: 100
+    batch_inference: false
+    
+  # Model serving
+  serving:
+    method: "local"  # local | api | cloud
+    cache_predictions: true
+    cache_ttl: 60  # seconds
+
+# ================================================================
+# EXPLAINABILITY (XAI)
+# ================================================================
+explainability:
+  
+  enabled: true
+  
+  # SHAP values
+  shap:
+    enabled: true
+    calculate_for_predictions: true
+    
+  # LIME
+  lime:
+    enabled: false
+    
+  # Feature importance
+  feature_importance:
+    enabled: true
+    method: "permutation"  # permutation | shap | built_in
+    
+  # Partial dependence plots
+  pdp:
+    enabled: true
+    features: ["top_10"]
+    
+  # Individual prediction explanation
+  individual_explanation:
+    enabled: true
+    top_features: 10
+
+# ================================================================
+# MODEL REGISTRY
+# ================================================================
+registry:
+  
+  enabled: true
+  
+  # Model metadata
+  metadata:
+    track_hyperparameters: true
+    track_metrics: true
+    track_training_data: true
+    track_git_commit: true
+    
+  # Model comparison
+  comparison:
+    enabled: true
+    challenger_models: true
+    ab_testing: true
+    
+  # Model promotion
+  promotion:
+    auto_promote: false
+    approval_required: true
+    
+    criteria:
+      min_accuracy: 0.60
+      min_sharpe: 1.5
+      max_drawdown: -0.15
+
+# ================================================================
+# ADVANCED TECHNIQUES
+# ================================================================
+advanced:
+  
+  # Transfer learning
+  transfer_learning:
+    enabled: false
+    pretrained_model: null
+    freeze_layers: 0
+    
+  # Reinforcement learning integration
+  rl_integration:
+    enabled: true
+    rl_model_weight: 0.20
+    
+  # Neural Architecture Search
+  nas:
+    enabled: false
+    search_space: "default"
+    
+  # Attention mechanisms
+  attention:
+    enabled: true
+    type: "self_attention"
+    
+  # Multi-task learning
+  multi_task:
+    enabled: false
+    tasks: ["price_prediction", "volatility_prediction"]
+    
+  # Ensemble diversity
+  diversity:
+    bagging: true
+    boosting: true
+    stacking: true
+
+# ================================================================
+# COMPUTATIONAL RESOURCES
+# ================================================================
+resources:
+  
+  # GPU utilization
+  gpu:
+    enabled: true
+    device: "cuda:0"
+    mixed_precision: true
+    
+  # Memory management
+  memory:
+    batch_size_auto: true
+    gradient_accumulation: false
+    
+  # Parallel processing
+  parallel:
+    enabled: true
+    n_jobs: -1
+    backend: "loky"  # loky | threading | multiprocessing
+
+# ================================================================
+# LOGGING & DEBUGGING
+# ================================================================
+logging:
+  
+  # Training logs
+  training_logs:
+    enabled: true
+    level: "INFO"
+    log_interval: 10  # batches
+    
+  # TensorBoard
+  tensorboard:
+    enabled: true
+    log_dir: "logs/tensorboard"
+    
+  # MLflow
+  mlflow:
+    enabled: true
+    tracking_uri: "file:./mlruns"
+    experiment_name: "gann_quant_ai"
+    
+  # Wandb
+  wandb:
+    enabled: false
+    project: "gann-quant-ai"
+    entity: null
