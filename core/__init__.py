@@ -6,8 +6,12 @@ Note: Some modules require optional dependencies (flask, tensorflow, etc.)
 These will be imported lazily to avoid import errors.
 """
 
-# Core trading modules (always available)
-from .data_feed import DataFeed
+# Core trading modules (always available) - import in order to avoid circular deps
+# First import standalone modules
+from .enums import (
+    OrderType, OrderSide, OrderStatus, PositionSide, MarginMode, BrokerType,
+    TradingMode, RiskMode, ExitMode, SignalSource, ConnectionState, EngineState, TimeFrame
+)
 from .gann_engine import GannEngine
 from .ehlers_engine import EhlersEngine
 from .ehlers_indicators import EhlersIndicators
@@ -31,6 +35,13 @@ from .feature_fusion_engine import FeatureFusionEngine, create_fused_features
 from .training_pipeline import TrainingPipeline, PredictionService, create_training_pipeline
 from .signal_engine import AISignalEngine, SignalType, SignalStrength
 from .risk_engine import RiskEngine, RiskConfig, RiskLevel
+
+# Lazy import for data_feed to avoid circular dependency
+# DataFeed imports from connectors which may import from core.enums
+def get_data_feed():
+    """Lazy loader for DataFeed to avoid circular imports."""
+    from .data_feed import DataFeed
+    return DataFeed
 
 # Try to import Flask-dependent modules
 FLASK_AVAILABLE = False

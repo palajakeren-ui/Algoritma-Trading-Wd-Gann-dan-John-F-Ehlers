@@ -6,40 +6,12 @@ import time
 from datetime import datetime
 from typing import Dict, List, Optional, Callable, Tuple
 from loguru import logger
-from enum import Enum
 from dataclasses import dataclass, field
 from threading import Lock
 import uuid
 
-
-class OrderType(Enum):
-    MARKET = "MARKET"
-    LIMIT = "LIMIT"
-    STOP = "STOP"
-    STOP_LIMIT = "STOP_LIMIT"
-    TAKE_PROFIT = "TAKE_PROFIT"
-    STOP_LOSS = "STOP_LOSS"
-
-
-class OrderSide(Enum):
-    BUY = "BUY"
-    SELL = "SELL"
-
-
-class OrderStatus(Enum):
-    PENDING = "PENDING"
-    SUBMITTED = "SUBMITTED"
-    PARTIALLY_FILLED = "PARTIALLY_FILLED"
-    FILLED = "FILLED"
-    CANCELLED = "CANCELLED"
-    REJECTED = "REJECTED"
-    EXPIRED = "EXPIRED"
-
-
-class BrokerType(Enum):
-    BINANCE = "binance"
-    MT5 = "metatrader5"
-    PAPER = "paper"
+# Import enums from shared module - single source of truth
+from core.enums import OrderType, OrderSide, OrderStatus, BrokerType, MarginMode, PositionSide
 
 
 @dataclass

@@ -8,11 +8,16 @@ import pandas as pd
 from typing import Dict, Any, List, Optional, Tuple
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from enum import Enum
 import threading
 import queue
 import time
 from loguru import logger
+
+# Import enums from shared module - single source of truth
+from core.enums import (
+    OrderSide, OrderType, OrderStatus, PositionSide, 
+    TradingMode, RiskMode, ExitMode, SignalSource, EngineState
+)
 
 # Try to import core engines
 try:
@@ -29,32 +34,6 @@ try:
     from core.risk_engine import RiskEngine
 except ImportError:
     RiskEngine = None
-
-
-class TradingMode(Enum):
-    SPOT = "spot"
-    FUTURES = "futures"
-
-
-class RiskMode(Enum):
-    DYNAMIC = "dynamic"
-    FIXED = "fixed"
-
-
-class ExitMode(Enum):
-    TICKS = "ticks"
-    RISK_REWARD = "rr"
-
-
-class OrderSide(Enum):
-    BUY = "BUY"
-    SELL = "SELL"
-
-
-class OrderType(Enum):
-    MARKET = "MARKET"
-    LIMIT = "LIMIT"
-    CANCEL = "CANCEL"
 
 
 @dataclass

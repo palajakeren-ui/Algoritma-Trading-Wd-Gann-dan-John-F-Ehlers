@@ -12,11 +12,13 @@ from typing import Dict, List, Optional, Any, Union
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
 import hashlib
 import hmac
 import time
 import json
+
+# Import enums from shared module - single source of truth
+from core.enums import OrderSide, OrderType, OrderStatus, PositionSide, MarginMode
 
 # Try importing ccxt for exchange connectivity
 try:
@@ -25,41 +27,6 @@ try:
 except ImportError:
     CCXT_AVAILABLE = False
     logger.warning("ccxt not installed. Exchange connectivity will be limited.")
-
-
-class OrderSide(Enum):
-    BUY = "buy"
-    SELL = "sell"
-
-
-class OrderType(Enum):
-    MARKET = "market"
-    LIMIT = "limit"
-    STOP_LOSS = "stop_loss"
-    TAKE_PROFIT = "take_profit"
-    STOP_LIMIT = "stop_limit"
-    TRAILING_STOP = "trailing_stop"
-
-
-class OrderStatus(Enum):
-    PENDING = "pending"
-    OPEN = "open"
-    FILLED = "filled"
-    PARTIALLY_FILLED = "partially_filled"
-    CANCELLED = "cancelled"
-    REJECTED = "rejected"
-    EXPIRED = "expired"
-
-
-class MarginMode(Enum):
-    CROSS = "cross"
-    ISOLATED = "isolated"
-
-
-class PositionSide(Enum):
-    LONG = "long"
-    SHORT = "short"
-    BOTH = "both"
 
 
 @dataclass

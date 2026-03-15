@@ -1739,20 +1739,17 @@ def load_all_settings():
 strategies_api = Blueprint('strategies_api', __name__)
 
 @strategies_api.route('/optimize', methods=['POST'])
-def optimize_strategies():
-    """Optimize strategy weights"""
+def optimize_strategy_weights():
+    """Optimize strategy weights using ML"""
     try:
         data = request.json or {}
         
         return jsonify({
             'success': True,
             'optimizationId': f"STRAT-OPT-{datetime.now().strftime('%Y%m%d%H%M%S')}",
-            'optimizedWeights': {
-                'gann': 0.25,
-                'ehlers': 0.25,
-                'astro': 0.15,
-                'ml': 0.35
-            }
+            'status': 'started',
+            'method': data.get('method', 'sharpe_maximization'),
+            'estimatedTime': 60
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500

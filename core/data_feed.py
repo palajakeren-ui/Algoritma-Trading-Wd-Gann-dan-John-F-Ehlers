@@ -10,11 +10,14 @@ No yfinance or public fallback — all data flows through broker connections.
 import pandas as pd
 import numpy as np
 from loguru import logger
-from typing import Dict, Optional, List, Any
+from typing import Dict, Optional, List, Any, TYPE_CHECKING
 from datetime import datetime, timedelta
-from connectors.metatrader_connector import MetaTraderConnectorFactory, MTCredentials, MTVersion
-from connectors.exchange_connector import ExchangeConnectorFactory, ExchangeCredentials
-from connectors.fix_connector import FIXConnectorFactory, FIXCredentials
+
+# Lazy imports to avoid circular dependency
+# These will be imported inside methods that need them
+# from connectors.metatrader_connector import MetaTraderConnectorFactory, MTCredentials, MTVersion
+# from connectors.exchange_connector import ExchangeConnectorFactory, ExchangeCredentials
+# from connectors.fix_connector import FIXConnectorFactory, FIXCredentials
 
 # Try importing ccxt for exchange historical data
 try:
@@ -45,6 +48,11 @@ class DataFeed:
 
     def _initialize_connectors(self):
         """Initializes connector objects based on the broker configuration."""
+        # Lazy imports to avoid circular dependency with core.enums
+        from connectors.metatrader_connector import MetaTraderConnectorFactory, MTCredentials, MTVersion
+        from connectors.exchange_connector import ExchangeConnectorFactory, ExchangeCredentials
+        from connectors.fix_connector import FIXConnectorFactory, FIXCredentials
+        
         logger.debug("Initializing data connectors from config...")
         
         trading_modes = self.broker_config.get('trading_modes', [])
