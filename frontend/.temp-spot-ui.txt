@@ -1,0 +1,106 @@
+                      {mode.brokerType === "crypto_exchange" && (
+                        <div className="space-y-3 p-3 rounded-lg bg-secondary/30 border border-border">
+                          <div className="space-y-2">
+                            <Label className="text-xs">Exchange</Label>
+                            <Select
+                              value={mode.exchange}
+                              onValueChange={(v) => {
+                                const selected = EXCHANGE_OPTIONS.find(ex => ex.value === v);
+                                handleUpdateMode(mode.id, { 
+                                  exchange: v,
+                                  endpoint: selected?.defaultEndpoint || "",
+                                  passphrase: ""
+                                });
+                              }}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select exchange" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {EXCHANGE_OPTIONS.filter(ex => ex.type === "both" || ex.type === "spot").map((ex) => (
+                                  <SelectItem key={ex.value} value={ex.value}>
+                                    {ex.icon} {ex.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label className="text-xs">API Endpoint</Label>
+                            <Input
+                              value={mode.endpoint}
+                              onChange={(e) => handleUpdateMode(mode.id, { endpoint: e.target.value })}
+                              placeholder="https://api.exchange.com"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-xs">API Key</Label>
+                            <div className="flex gap-2">
+                              <Input
+                                type={showSecrets[`${mode.id}-key`] ? "text" : "password"}
+                                value={mode.apiKey}
+                                onChange={(e) => handleUpdateMode(mode.id, { apiKey: e.target.value })}
+                                placeholder="Enter API Key"
+                                className="flex-1"
+                              />
+                              <Button variant="outline" size="icon" onClick={() => toggleSecret(`${mode.id}-key`)}>
+                                {showSecrets[`${mode.id}-key`] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                              </Button>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-xs">API Secret</Label>
+                            <div className="flex gap-2">
+                              <Input
+                                type={showSecrets[`${mode.id}-secret`] ? "text" : "password"}
+                                value={mode.apiSecret}
+                                onChange={(e) => handleUpdateMode(mode.id, { apiSecret: e.target.value })}
+                                placeholder="Enter API Secret"
+                                className="flex-1"
+                              />
+                              <Button variant="outline" size="icon" onClick={() => toggleSecret(`${mode.id}-secret`)}>
+                                {showSecrets[`${mode.id}-secret`] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                              </Button>
+                            </div>
+                          </div>
+
+                          {EXCHANGE_OPTIONS.find(ex => ex.value === mode.exchange)?.hasPassphrase && (
+                            <div className="space-y-2">
+                              <Label className="text-xs">Passphrase</Label>
+                              <div className="flex gap-2">
+                                <Input
+                                  type={showSecrets[`${mode.id}-passphrase`] ? "text" : "password"}
+                                  value={mode.passphrase}
+                                  onChange={(e) => handleUpdateMode(mode.id, { passphrase: e.target.value })}
+                                  placeholder="Enter Passphrase"
+                                  className="flex-1"
+                                />
+                                <Button variant="outline" size="icon" onClick={() => toggleSecret(`${mode.id}-passphrase`)}>
+                                  {showSecrets[`${mode.id}-passphrase`] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              checked={mode.testnet}
+                              onCheckedChange={(checked) => handleUpdateMode(mode.id, { testnet: checked })}
+                            />
+                            <Label className="text-xs">Testnet Mode</Label>
+                          </div>
+
+                          <Button
+                            onClick={() => testBrokerConnection(mode.id)}
+                            variant="outline"
+                            size="sm"
+                            className="w-full gap-2"
+                          >
+                            <RefreshCw className="w-4 h-4" />
+                            Test Connection
+                          </Button>
+                        </div>
+                      )}

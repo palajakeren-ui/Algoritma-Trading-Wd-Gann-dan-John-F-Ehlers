@@ -1,0 +1,495 @@
+# ============================================================================
+# CENAYANG MARKET — Kubernetes Deployment Configs for Live Trading
+# ============================================================================
+
+---
+# Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: trading-system
+  labels:
+    app: cenayang-market
+    environment: production
+
+---
+# ConfigMap for application configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: trading-config
+  namespace: trading-system
+data:
+  RUST_LOG: "info"
+  GIN_MODE: "release"
+  NATS_URL: "nats://nats:4222"
+  REDIS_URL: "redis://redis:6379"
+  MAX_DRAWDOWN_PCT: "5.0"
+  MAX_POSITION_SIZE: "100000"
+  DAILY_LOSS_LIMIT: "10000"
+  KILL_SWITCH_ENABLED: "true"
+
+---
+# Secret for sensitive data
+apiVersion: v1
+kind: Secret
+metadata:
+  name: trading-secrets
+  namespace: trading-system
+type: Opaque
+stringData:
+  JWT_SECRET: "change-this-to-a-very-long-random-string-at-least-32-characters"
+  DATABASE_URL: "postgresql://trading:password@postgres:5432/trading"
+  EXCHANGE_API_KEY: ""
+  EXCHANGE_API_SECRET: ""
+
+---
+# Rust Gateway Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rust-gateway
+  namespace: trading-system
+  labels:
+    app: rust-gateway
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: rust-gateway
+  template:
+    metadata:
+      labels:
+        app: rust-gateway
+    spec:
+      containers:
+      - name: rust-gateway
+        image: cenayang/rust-gateway:3.0.1
+        ports:
+        - containerPort: 8080
+          name: http
+        envFrom:
+        - configMapRef:
+            name: trading-config
+        - secretRef:
+            name: trading-secrets
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+          limits:
+            cpu: "2000m"
+            memory: "2Gi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 3
+        volumeMounts:
+        - name: shm
+          mountPath: /dev/shm
+        - name: state-persistence
+          mountPath: /app/data
+      volumes:
+      - name: shm
+        emptyDir:
+          medium: Memory
+          sizeLimit: "1Gi"
+      - name: state-persistence
+        persistentVolumeClaim:
+          claimName: trading-state-pvc
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app: rust-gateway
+              topologyKey: kubernetes.io/hostname
+
+---
+# Rust Gateway Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: rust-gateway
+  namespace: trading-system
+spec:
+  selector:
+    app: rust-gateway
+  ports:
+  - port: 8080
+    targetPort: 8080
+    name: http
+  type: ClusterIP
+
+---
+# Go Orchestrator Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: go-orchestrator
+  namespace: trading-system
+  labels:
+    app: go-orchestrator
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: go-orchestrator
+  template:
+    metadata:
+      labels:
+        app: go-orchestrator
+    spec:
+      containers:
+      - name: go-orchestrator
+        image: cenayang/go-orchestrator:3.0.1
+        ports:
+        - containerPort: 8090
+          name: http
+        envFrom:
+        - configMapRef:
+            name: trading-config
+        - secretRef:
+            name: trading-secrets
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "256Mi"
+          limits:
+            cpu: "1000m"
+            memory: "1Gi"
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 8090
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /api/ready
+            port: 8090
+          initialDelaySeconds: 5
+          periodSeconds: 3
+        volumeMounts:
+        - name: database
+          mountPath: /app/data
+      volumes:
+      - name: database
+        persistentVolumeClaim:
+          claimName: trading-database-pvc
+
+---
+# Go Orchestrator Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: go-orchestrator
+  namespace: trading-system
+spec:
+  selector:
+    app: go-orchestrator
+  ports:
+  - port: 8090
+    targetPort: 8090
+    name: http
+  type: ClusterIP
+
+---
+# Frontend Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: trading-system
+  labels:
+    app: frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: cenayang/frontend:3.0.1
+        ports:
+        - containerPort: 80
+          name: http
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 10
+
+---
+# Frontend Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: trading-system
+spec:
+  selector:
+    app: frontend
+  ports:
+  - port: 80
+    targetPort: 80
+    name: http
+  type: ClusterIP
+
+---
+# NATS Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nats
+  namespace: trading-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nats
+  template:
+    metadata:
+      labels:
+        app: nats
+    spec:
+      containers:
+      - name: nats
+        image: nats:2.10-alpine
+        args:
+        - "--http_port"
+        - "8222"
+        - "--cluster"
+        - "nats://0.0.0.0:6222"
+        ports:
+        - containerPort: 4222
+          name: client
+        - containerPort: 8222
+          name: monitoring
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
+
+---
+# NATS Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: nats
+  namespace: trading-system
+spec:
+  selector:
+    app: nats
+  ports:
+  - port: 4222
+    targetPort: 4222
+    name: client
+  - port: 8222
+    targetPort: 8222
+    name: monitoring
+
+---
+# Redis Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: trading-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        args:
+        - "--appendonly"
+        - "yes"
+        ports:
+        - containerPort: 6379
+          name: redis
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
+
+---
+# Redis Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: trading-system
+spec:
+  selector:
+    app: redis
+  ports:
+  - port: 6379
+    targetPort: 6379
+
+---
+# Persistent Volume Claims
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: trading-state-pvc
+  namespace: trading-system
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: trading-database-pvc
+  namespace: trading-system
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+# Ingress with SSL
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: trading-ingress
+  namespace: trading-system
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/websocket-services: "go-orchestrator"
+spec:
+  tls:
+  - hosts:
+    - trading.cenayang.com
+    secretName: trading-tls-secret
+  rules:
+  - host: trading.cenayang.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend
+            port:
+              number: 80
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: go-orchestrator
+            port:
+              number: 8090
+      - path: /ws
+        pathType: Prefix
+        backend:
+          service:
+            name: go-orchestrator
+            port:
+              number: 8090
+
+---
+# Horizontal Pod Autoscaler for Rust Gateway
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: rust-gateway-hpa
+  namespace: trading-system
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: rust-gateway
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+
+---
+# Horizontal Pod Autoscaler for Go Orchestrator
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: go-orchestrator-hpa
+  namespace: trading-system
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: go-orchestrator
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+
+---
+# Pod Disruption Budget
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: trading-pdb
+  namespace: trading-system
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: rust-gateway

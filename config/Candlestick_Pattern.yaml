@@ -1,0 +1,1037 @@
+# ================================================================
+# CANDLESTICK PATTERN DATABASE v5.0 (MASTER ARCHIVE)
+# ================================================================
+# Comprehensive database covering Nison, Bulkowski, Modern Price Action.
+# Total Patterns: 130+
+# Last Updated: 2025-11-16
+# ================================================================
+
+version: "5.0.0"
+description: "Master archive of all known candlestick patterns including modern hybrids"
+
+# ================= SINGLE CANDLESTICK PATTERNS =================
+patterns:
+  
+  # --- MARUBOZU VARIANTS ---
+  - id: "CS_001"
+    name: "Long White Marubozu"
+    type: "bullish_continuation"
+    reliability: "high"
+    rules:
+      - body_ratio: "> 0.90"
+      - color: "white"
+      - trend: "up"
+
+  - id: "CS_002"
+    name: "Long Black Marubozu"
+    type: "bearish_continuation"
+    reliability: "high"
+    rules:
+      - body_ratio: "> 0.90"
+      - color: "black"
+      - trend: "down"
+      
+  - id: "CS_003"
+    name: "White Opening Marubozu"
+    type: "bullish_continuation"
+    reliability: "medium"
+    rules:
+      - upper_shadow: "none"
+      - body: "white_long"
+      
+  - id: "CS_004"
+    name: "Black Opening Marubozu"
+    type: "bearish_continuation"
+    reliability: "medium"
+    rules:
+      - upper_shadow: "none"
+      - body: "black_long"
+      
+  - id: "CS_005"
+    name: "White Closing Marubozu"
+    type: "bullish_continuation"
+    reliability: "medium"
+    rules:
+      - lower_shadow: "none"
+      - body: "white_long"
+      
+  - id: "CS_006"
+    name: "Black Closing Marubozu"
+    type: "bearish_continuation"
+    reliability: "medium"
+    rules:
+      - lower_shadow: "none"
+      - body: "black_long"
+
+  # --- HAMMERS, HANGING MAN, & RELATED ---
+  - id: "CS_007"
+    name: "Hammer"
+    type: "bullish_reversal"
+    reliability: "medium"
+    rules:
+      - trend: "down"
+      - lower_shadow_ratio: ">= 2.0"
+      - upper_shadow_ratio: "< 0.1"
+      
+  - id: "CS_008"
+    name: "Inverted Hammer"
+    type: "bullish_reversal"
+    reliability: "medium"
+    rules:
+      - trend: "down"
+      - upper_shadow_ratio: ">= 2.0"
+      - lower_shadow_ratio: "< 0.1"
+      
+  - id: "CS_009"
+    name: "Hanging Man"
+    type: "bearish_reversal"
+    reliability: "medium"
+    rules:
+      - trend: "up"
+      - lower_shadow_ratio: ">= 2.0"
+      - upper_shadow_ratio: "< 0.1"
+      
+  - id: "CS_010"
+    name: "Shooting Star"
+    type: "bearish_reversal"
+    reliability: "medium"
+    rules:
+      - trend: "up"
+      - upper_shadow_ratio: ">= 2.0"
+      - lower_shadow_ratio: "< 0.1"
+      
+  - id: "CS_011"
+    name: "Takuri (Dragonfly Doji variant)"
+    type: "bullish_reversal"
+    reliability: "high"
+    rules:
+      - trend: "down"
+      - lower_shadow: "very_long"
+      - body: "very_small_at_top"
+      
+  - id: "CS_012"
+    name: "Inverted Takuri (Gravestone Doji variant)"
+    type: "bearish_reversal"
+    reliability: "high"
+    rules:
+      - trend: "up"
+      - upper_shadow: "very_long"
+      - body: "very_small_at_bottom"
+      
+  - id: "CS_013"
+    name: "Paper Umbrella"
+    type: "bullish_reversal"
+    reliability: "medium"
+    rules:
+      - lower_shadow: "very_long"
+      - body: "small"
+
+  # --- DOJI VARIANTS ---
+  - id: "CS_014"
+    name: "Standard Doji"
+    type: "indecision"
+    reliability: "low"
+    rules:
+      - body_ratio: "< 0.05"
+      
+  - id: "CS_015"
+    name: "Long-Legged Doji (Rickshaw)"
+    type: "indecision"
+    reliability: "low"
+    rules:
+      - body_ratio: "< 0.05"
+      - shadows: "very_long_equal"
+      
+  - id: "CS_016"
+    name: "Dragonfly Doji"
+    type: "bullish_reversal"
+    reliability: "high"
+    rules:
+      - body_ratio: "< 0.05"
+      - lower_shadow: "long"
+      - upper_shadow: "none"
+      - trend: "down"
+      
+  - id: "CS_017"
+    name: "Gravestone Doji"
+    type: "bearish_reversal"
+    reliability: "high"
+    rules:
+      - body_ratio: "< 0.05"
+      - upper_shadow: "long"
+      - lower_shadow: "none"
+      - trend: "up"
+      
+  - id: "CS_018"
+    name: "Four Price Doji"
+    type: "indecision"
+    reliability: "rare_extreme"
+    rules:
+      - open_eq_high: true
+      - open_eq_low: true
+      
+  - id: "CS_019"
+    name: "Boshi (Doji at high/top)"
+    type: "bearish_reversal"
+    reliability: "medium"
+    rules:
+      - body: "doji"
+      - position: "high_of_range"
+
+  # --- SPINNING TOPS & BELT HOLDS ---
+  - id: "CS_020"
+    name: "Spinning Top"
+    type: "indecision"
+    reliability: "low"
+    rules:
+      - body_ratio: "< 0.3"
+      - shadows: "visible_balanced"
+      
+  - id: "CS_021"
+    name: "White Belt Hold"
+    type: "bullish_continuation"
+    reliability: "medium"
+    rules:
+      - open: "equal_low"
+      - close: "near_high"
+      
+  - id: "CS_022"
+    name: "Black Belt Hold"
+    type: "bearish_continuation"
+    reliability: "medium"
+    rules:
+      - open: "equal_high"
+      - close: "near_low"
+
+# ================= DOUBLE CANDLESTICK PATTERNS =================
+  
+  # --- ENGULFING ---
+  - id: "CS_030"
+    name: "Bullish Engulfing"
+    type: "bullish_reversal"
+    reliability: "high"
+    rules:
+      - trend: "down"
+      - c1: "bearish_body"
+      - c2: "bullish_body_engulfs_c1"
+      
+  - id: "CS_031"
+    name: "Bearish Engulfing"
+    type: "bearish_reversal"
+    reliability: "high"
+    rules:
+      - trend: "up"
+      - c1: "bullish_body"
+      - c2: "bearish_body_engulfs_c1"
+
+  # --- PIERCING & COVERING ---
+  - id: "CS_032"
+    name: "Piercing Line"
+    type: "bullish_reversal"
+    reliability: "medium"
+    rules:
+      - trend: "down"
+      - c1: "long_bearish"
+      - c2_open: "below_c1_low"
+      - c2_close: "above_c1_midpoint"
+      
+  - id: "CS_033"
+    name: "Dark Cloud Cover"
+    type: "bearish_reversal"
+    reliability: "medium"
+    rules:
+      - trend: "up"
+      - c1: "long_bullish"
+      - c2_open: "above_c1_high"
+      - c2_close: "below_c1_midpoint"
+
+  # --- HARAMI ---
+  - id: "CS_034"
+    name: "Bullish Harami"
+    type: "bullish_reversal"
+    reliability: "low"
+    rules:
+      - trend: "down"
+      - c1: "large_bearish"
+      - c2: "small_bullish_inside_c1"
+      
+  - id: "CS_035"
+    name: "Bearish Harami"
+    type: "bearish_reversal"
+    reliability: "low"
+    rules:
+      - trend: "up"
+      - c1: "large_bullish"
+      - c2: "small_bearish_inside_c1"
+      
+  - id: "CS_036"
+    name: "Bullish Harami Cross"
+    type: "bullish_reversal"
+    reliability: "high"
+    rules:
+      - trend: "down"
+      - c1: "large_bearish"
+      - c2: "doji_inside_c1"
+      
+  - id: "CS_037"
+    name: "Bearish Harami Cross"
+    type: "bearish_reversal"
+    reliability: "high"
+    rules:
+      - trend: "up"
+      - c1: "large_bullish"
+      - c2: "doji_inside_c1"
+
+  # --- TWEEZERS ---
+  - id: "CS_038"
+    name: "Tweezer Top"
+    type: "bearish_reversal"
+    reliability: "medium"
+    rules:
+      - trend: "up"
+      - c1_high: "eq_c2_high"
+      - shadows: "upper_present"
+      
+  - id: "CS_039"
+    name: "Tweezer Bottom"
+    type: "bullish_reversal"
+    reliability: "medium"
+    rules:
+      - trend: "down"
+      - c1_low: "eq_c2_low"
+      - shadows: "lower_present"
+
+  # --- SEPARATING LINES ---
+  - id: "CS_040"
+    name: "Bullish Separating Line"
+    type: "bullish_continuation"
+    reliability: "low"
+    rules:
+      - c1: "bullish"
+      - c2: "bullish"
+      - c2_open: "eq_c1_open"
+      - c2_close: "higher"
+      
+  - id: "CS_041"
+    name: "Bearish Separating Line"
+    type: "bearish_continuation"
+    reliability: "low"
+    rules:
+      - c1: "bearish"
+      - c2: "bearish"
+      - c2_open: "eq_c1_open"
+      - c2_close: "lower"
+
+  # --- MATCHING HIGH/LOW ---
+  - id: "CS_042"
+    name: "Matching Low"
+    type: "bullish_reversal"
+    reliability: "medium"
+    rules:
+      - trend: "down"
+      - c1_low: "approx_eq_c2_low"
+      - c1_bearish: true
+      - c2_bullish: true
+      
+  - id: "CS_043"
+    name: "Matching High"
+    type: "bearish_reversal"
+    reliability: "medium"
+    rules:
+      - trend: "up"
+      - c1_high: "approx_eq_c2_high"
+      - c1_bullish: true
+      - c2_bearish: true
+
+  # --- KICKING (High Reliability) ---
+  - id: "CS_044"
+    name: "Bullish Kicking"
+    type: "bullish_reversal"
+    reliability: "very_high"
+    rules:
+      - c1: "black_marubozu"
+      - c2: "white_marubozu"
+      - gap: "upward_gap_significant"
+      
+  - id: "CS_045"
+    name: "Bearish Kicking"
+    type: "bearish_reversal"
+    reliability: "very_high"
+    rules:
+      - c1: "white_marubozu"
+      - c2: "black_marubozu"
+      - gap: "downward_gap_significant"
+      
+  # --- GAP COUNTERS ---
+  - id: "CS_046"
+    name: "Upside Gap Two Crows"
+    type: "bearish_reversal"
+    reliability: "medium"
+    rules:
+      - trend: "up"
+      - c1: "long_white"
+      - c2: "black_gap_up"
+      - c3: "black_open_higher_close_lower"
+
+  # --- HARAMI VARIANTS ---
+  - id: "CS_047"
+    name: "Concealing Baby Swallow"
+    type: "bullish_reversal"
+    reliability: "medium"
+    rules:
+      - trend: "down"
+      - c1: "long_black"
+      - c2: "black_marubozu_inside_c1"
+
+# ================= TRIPLE CANDLESTICK PATTERNS =================
+  
+  # --- STARS ---
+  - id: "CS_050"
+    name: "Morning Star"
+    type: "bullish_reversal"
+    reliability: "high"
+    rules:
+      - trend: "down"
+      - c1: "long_bearish"
+      - c2: "small_gap_down"
+      - c3: "bullish_above_mid_c1"
+      
+  - id: "CS_051"
+    name: "Morning Doji Star"
+    type: "bullish_reversal"
+    reliability: "very_high"
+    rules:
+      - trend: "down"
+      - c1: "long_bearish"
+      - c2: "doji_gap_down"
+      - c3: "bullish_above_mid_c1"
+      
+  - id: "CS_052"
+    name: "Evening Star"
+    type: "bearish_reversal"
+    reliability: "high"
+    rules:
+      - trend: "up"
+      - c1: "long_bullish"
+      - c2: "small_gap_up"
+      - c3: "bearish_below_mid_c1"
+      
+  - id: "CS_053"
+    name: "Evening Doji Star"
+    type: "bearish_reversal"
+    reliability: "very_high"
+    rules:
+      - trend: "up"
+      - c1: "long_bullish"
+      - c2: "doji_gap_up"
+      - c3: "bearish_below_mid_c1"
+
+  # --- SOLDIERS & CROWS ---
+  - id: "CS_054"
+    name: "Three White Soldiers"
+    type: "bullish_continuation"
+    reliability: "high"
+    rules:
+      - trend: "up"
+      - c1_3: "white_bodies"
+      - opens: "within_prev_body"
+      - closes: "higher_highs"
+      
+  - id: "CS_055"
+    name: "Three Black Crows"
+    type: "bearish_continuation"
+    reliability: "high"
+    rules:
+      - trend: "down"
+      - c1_3: "black_bodies"
+      - opens: "within_prev_body"
+      - closes: "lower_lows"
+      
+  - id: "CS_056"
+    name: "Advance Block"
+    type: "bearish_reversal"
+    reliability: "medium"
+    rules:
+      - trend: "up"
+      - c1_3: "white"
+      - bodies: "progressively_smaller"
+      
+  - id: "CS_057"
+    name: "Deliberation"
+    type: "bearish_reversal"
+    reliability: "medium"
+    rules:
+      - trend: "up"
+      - c1_3: "white"
+      - bodies: "small_stalled"
+
+  # --- INSIDE & OUTSIDE ---
+  - id: "CS_058"
+    name: "Three Inside Up"
+    type: "bullish_reversal"
+    reliability: "high"
+    rules:
+      - trend: "down"
+      - c1_2: "bullish_harami"
+      - c3: "white_close_above_c1_high"
+      
+  - id: "CS_059"
+    name: "Three Inside Down"
+    type: "bearish_reversal"
+    reliability: "high"
+    rules:
+      - trend: "up"
+      - c1_2: "bearish_harami"
+      - c3: "black_close_below_c1_low"
+      
+  - id: "CS_060"
+    name: "Three Outside Up"
+    type: "bullish_reversal"
+    reliability: "high"
+    rules:
+      - trend: "down"
+      - c1_2: "bullish_engulfing"
+      - c3: "white_higher_close"
+      
+  - id: "CS_061"
+    name: "Three Outside Down"
+    type: "bearish_reversal"
+    reliability: "high"
+    rules:
+      - trend: "up"
+      - c1_2: "bearish_engulfing"
+      - c3: "black_lower_close"
+
+  # --- UNIQUE TRIPLES ---
+  - id: "CS_062"
+    name: "Three Stars in South"
+    type: "bullish_reversal"
+    reliability: "medium"
+    rules:
+      - trend: "down"
+      - c1: "long_black"
+      - c2: "black_hamr_below_c1_close"
+      - c3: "small_black_inside_c2"
+      
+  - id: "CS_063"
+    name: "Identical Three Crows"
+    type: "bearish_continuation"
+    reliability: "medium"
+    rules:
+      - c1_3: "similar_black_candles"
+      - opens: "at_prev_close"
+      
+  - id: "CS_064"
+    name: "Breakaway"
+    type: "bullish_reversal"
+    reliability: "medium"
+    rules:
+      - trend: "down"
+      - c1: "long_black"
+      - c2: "black_gap_down"
+      - c3_4: "small_bodies_lower"
+      - c5: "white_gap_up_breakout"
+      
+  - id: "CS_065"
+    name: "Ladder Top"
+    type: "bearish_reversal"
+    reliability: "medium"
+    rules:
+      - trend: "up"
+      - c1_4: "gaps_up_high_shadows"
+      - c5: "black_engulfs_prev"
+      
+  - id: "CS_066"
+    name: "Ladder Bottom"
+    type: "bullish_reversal"
+    reliability: "medium"
+    rules:
+      - trend: "down"
+      - c1_4: "gaps_down_low_shadows"
+      - c5: "white_engulfs_prev"
+      
+  - id: "CS_067"
+    name: "Unique Three River Bottom"
+    type: "bullish_reversal"
+    reliability: "low"
+    rules:
+      - c1: "long_black"
+      - c2: "black_hammer_below"
+      - c3: "small_black_inside_c2"
+
+# ================= FOUR & FIVE CANDLE PATTERNS =================
+  
+  # --- THREE METHODS (Actually 4-5 candles) ---
+  - id: "CS_070"
+    name: "Rising Three Methods"
+    type: "bullish_continuation"
+    reliability: "high"
+    rules:
+      - c1: "long_white"
+      - c2_4: "small_bears_within_c1"
+      - c5: "long_white_breakout_high"
+      
+  - id: "CS_071"
+    name: "Falling Three Methods"
+    type: "bearish_continuation"
+    reliability: "high"
+    rules:
+      - c1: "long_black"
+      - c2_4: "small_bulls_within_c1"
+      - c5: "long_black_breakout_low"
+      
+  # --- RELATED CONTINUATION ---
+  - id: "CS_072"
+    name: "Three Rising Valleys"
+    type: "bullish_continuation"
+    reliability: "medium"
+    rules:
+      - c1: "long_white"
+      - c2_3: "small_bears_dip_not_break_c1_low"
+      - c4: "long_white_higher"
+
+  # --- MAT HOLD ---
+  - id: "CS_073"
+    name: "Mat Hold"
+    type: "bullish_continuation"
+    reliability: "high"
+    rules:
+      - c1: "long_white"
+      - c2_5: "small_bears_dip_hold_c1_low"
+      - c6: "long_white_breakout"
+      
+  # --- SIDE BY SIDE ---
+  - id: "CS_074"
+    name: "Side-by-Side White Lines"
+    type: "bullish_continuation"
+    reliability: "medium"
+    rules:
+      - c1: "long_white"
+      - c2: "white_gap_up"
+      - c3: "white_similar_body_to_c2"
+
+# ================= SPECIAL & EXOTIC PATTERNS =================
+  
+  # --- ABANDONED BABY (Gapped Doji) ---
+  - id: "CS_080"
+    name: "Abandoned Baby Bottom"
+    type: "bullish_reversal"
+    reliability: "very_high"
+    rules:
+      - trend: "down"
+      - c1: "long_bearish"
+      - c2: "doji_gapped_down"
+      - c3: "long_bullish_gapped_up"
+      
+  - id: "CS_081"
+    name: "Abandoned Baby Top"
+    type: "bearish_reversal"
+    reliability: "very_high"
+    rules:
+      - trend: "up"
+      - c1: "long_bullish"
+      - c2: "doji_gapped_up"
+      - c3: "long_bearish_gapped_down"
+
+  # --- TASUKI GAPS ---
+  - id: "CS_082"
+    name: "Upward Gap Tasuki"
+    type: "bullish_continuation"
+    reliability: "medium"
+    rules:
+      - c1: "white_gap_up"
+      - c2: "black_inside_c1_body"
+
+  # --- GAPPING PLAY ---
+  - id: "CS_083"
+    name: "Bullish Gapping Play"
+    type: "bullish_continuation"
+    reliability: "medium"
+    rules:
+      - trend: "up"
+      - c1_2: "white_gaps_up"
+      - c3: "small_bearish_doji"
+      - c4: "white_resume"
+
+  # --- HIGH PRICE & LOW PRICE GAPS ---
+  - id: "CS_084"
+    name: "High-Wave Candle"
+    type: "indecision_volatility"
+    reliability: "low"
+    rules:
+      - shadows: "very_long_both"
+      - body: "small_center"
+
+  # --- 8 & 10 NEW RECORDS ---
+  - id: "CS_085"
+    name: "Eight New Price Highs"
+    type: "bearish_reversal"
+    reliability: "high"
+    rules:
+      - count: "8_consecutive_higher_highs"
+      - context: "overbought"
+      
+  - id: "CS_086"
+    name: "Ten New Price Lows"
+    type: "bullish_reversal"
+    reliability: "high"
+    rules:
+      - count: "10_consecutive_lower_lows"
+      - context: "oversold"
+
+  # --- MOUNTAINS & RIVERS ---
+  - id: "CS_087"
+    name: "Three Mountains"
+    type: "bearish_reversal"
+    reliability: "high"
+    rules:
+      - structure: "triple_top"
+      - peaks: "approx_equal"
+      
+  - id: "CS_088"
+    name: "Three Rivers"
+    type: "bullish_reversal"
+    reliability: "high"
+    rules:
+      - structure: "triple_bottom"
+      - valleys: "approx_equal"
+
+  # --- THREE BUDDHAS ---
+  - id: "CS_089"
+    name: "Three Buddhas"
+    type: "reversal_context"
+    reliability: "high"
+    rules:
+      - structure: "three_similar_peaks_or_valleys"
+      - volume: "climax"
+
+  # --- DUMPING TOPS & FRYING PANS ---
+  - id: "CS_090"
+    name: "Dumping Tops"
+    type: "bearish_reversal"
+    reliability: "medium"
+    rules:
+      - c1_3: "progressively_higher_high_shadows"
+      - bodies: "black"
+
+  # --- FRYING PAN BOTTOMS ---
+  - id: "CS_091"
+    name: "Frying Pan Bottoms"
+    type: "bullish_reversal"
+    reliability: "medium"
+    rules:
+      - c1_3: "progressively_lower_low_shadows"
+      - bodies: "white"
+
+  # --- PARASOL & UMBRELLA ---
+  - id: "CS_092"
+    name: "Parasol"
+    type: "bullish_reversal"
+    reliability: "medium"
+    rules:
+      - body: "small"
+      - lower_shadow: "very_long"
+      - trend: "down"
+
+# ================= VOLUME CONFIRMATION PATTERNS =================
+
+  - id: "CS_100"
+    name: "Volume Spike Reversal"
+    type: "reversal_high_prob"
+    reliability: "high"
+    rules:
+      - price_action: "doji_or_small_body"
+      - volume: "highest_in_20_bars"
+      - trend: "established"
+
+# ================= ADDITIONAL EXOTIC / NISON SPECIFIC =================
+
+  - id: "CS_101"
+    name: "Last Engulfing Top"
+    type: "bearish_reversal"
+    reliability: "high"
+    rules:
+      - c1: "white"
+      - c2: "black_engulfs_c1"
+      - gap: "c2_open_above_c1_close"
+      
+  - id: "CS_102"
+    name: "Last Engulfing Bottom"
+    type: "bullish_reversal"
+    reliability: "high"
+    rules:
+      - c1: "black"
+      - c2: "white_engulfs_c1"
+      - gap: "c2_open_below_c1_close"
+
+  - id: "CS_103"
+    name: "Double Doji"
+    type: "indecision_extreme"
+    reliability: "medium"
+    rules:
+      - c1: "doji"
+      - c2: "doji"
+      - trend: "extended"
+
+  # --- MODERN TRADING VARIATIONS ---
+  - id: "CS_104"
+    name: "Dragonfly Doji Bullish Breakout"
+    type: "bullish_reversal"
+    reliability: "high"
+    rules:
+      - pattern: "dragonfly_doji"
+      - confirmation: "next_candle_breaks_high"
+
+  - id: "CS_105"
+    name: "Gravestone Doji Bearish Breakdown"
+    type: "bearish_reversal"
+    reliability: "high"
+    rules:
+      - pattern: "gravestone_doji"
+      - confirmation: "next_candle_breaks_low"
+      
+  # --- EXHAUSTION PATTERNS ---
+  - id: "CS_106"
+    name: "Exhaustion Gap"
+    type: "reversal"
+    reliability: "high"
+    rules:
+      - trend: "strong_up"
+      - gap: "gap_up"
+      - next: "close_below_prev_high_fill_gap"
+      
+  - id: "CS_107"
+    name: "Island Reversal Top"
+    type: "bearish_reversal"
+    reliability: "very_high"
+    rules:
+      - gap_up: "followed_by_gap_down"
+      - isolation: "price_island"
+      
+  - id: "CS_108"
+    name: "Island Reversal Bottom"
+    type: "bullish_reversal"
+    reliability: "very_high"
+    rules:
+      - gap_down: "followed_by_gap_up"
+      - isolation: "price_island"
+
+  # --- HEIKIN ASHI CANDLE SPECIFIC PATTERNS ---
+  # (Useful for filtering out noise from standard candles)
+  
+  - id: "CS_109"
+    name: "HA Bullish Reversal Signal"
+    type: "bullish_reversal"
+    reliability: "medium"
+    rules:
+      - ha_prev: "red"
+      - ha_curr: "green"
+      - ha_wick: "long_bottom"
+      - ha_body: "small_prev_large"
+
+  - id: "CS_110"
+    name: "HA Bearish Reversal Signal"
+    type: "bearish_reversal"
+    reliability: "medium"
+    rules:
+      - ha_prev: "green"
+      - ha_curr: "red"
+      - ha_wick: "long_top"
+      - ha_body: "small_prev_large"
+      
+  - id: "CS_111"
+    name: "HA Perfect Order"
+    type: "continuation"
+    reliability: "medium"
+    rules:
+      - ha_color: "consistent_5_bars"
+      - ha_body: "growing"
+
+# ================================================================
+# EXTENDED ARCHIVE (RARE & MODERN HYBRIDS) 112-130+
+# ================================================================
+
+  # --- MEETING LINES (Specific Color Interaction) ---
+  - id: "CS_112"
+    name: "Bullish Meeting Lines"
+    type: "bullish_reversal"
+    reliability: "medium"
+    rules:
+      - trend: "down"
+      - c1: "long_white"
+      - c2: "long_black"
+      - condition: "closes_approx_equal"
+
+  - id: "CS_113"
+    name: "Bearish Meeting Lines"
+    type: "bearish_reversal"
+    reliability: "medium"
+    rules:
+      - trend: "up"
+      - c1: "long_black"
+      - c2: "long_white"
+      - condition: "closes_approx_equal"
+      
+  # --- TRI-STAR (Triple Doji) ---
+  - id: "CS_114"
+    name: "Tri-Star Top"
+    type: "bearish_reversal"
+    reliability: "very_high"
+    rules:
+      - trend: "up"
+      - c1_3: "doji"
+      - c2: "gapped_up"
+      
+  - id: "CS_115"
+    name: "Tri-Star Bottom"
+    type: "bullish_reversal"
+    reliability: "very_high"
+    rules:
+      - trend: "down"
+      - c1_3: "doji"
+      - c2: "gapped_down"
+      
+  # --- STICK SANDWICH (Sandwich Pattern) ---
+  - id: "CS_116"
+    name: "Bullish Stick Sandwich"
+    type: "bullish_reversal"
+    reliability: "medium"
+    rules:
+      - trend: "down"
+      - c1: "long_white"
+      - c2: "black_body_engulfs_c1"
+      - c3: "long_white_engulfs_c2"
+      - opens: "approx_equal"
+
+  # --- THREE GAPPING METHODS ---
+  - id: "CS_117"
+    name: "Upside Gap Three Methods"
+    type: "bullish_continuation"
+    reliability: "high"
+    rules:
+      - trend: "up"
+      - c1: "long_white"
+      - c2: "white_gap_up"
+      - c3: "black_rests_on_c2_open"
+      - c4: "white_closes_higher"
+      
+  - id: "CS_118"
+    name: "Downside Gap Three Methods"
+    type: "bearish_continuation"
+    reliability: "high"
+    rules:
+      - trend: "down"
+      - c1: "long_black"
+      - c2: "black_gap_down"
+      - c3: "white_rests_on_c2_open"
+      - c4: "black_closes_lower"
+      
+  # --- MODERN PRICE ACTION (Inside/Outside Bar Logic) ---
+  - id: "CS_119"
+    name: "Bullish Hikkake (Inside Bar False Break)"
+    type: "bullish_reversal"
+    reliability: "medium"
+    rules:
+      - c1_2: "inside_bar_setup" # c2 inside c1
+      - c3: "false_breakdown_below_c1_low"
+      - c4: "rapid_reverse_close_above_c1_high"
+      
+  - id: "CS_120"
+    name: "Bearish Hikkake (Inside Bar False Break)"
+    type: "bearish_reversal"
+    reliability: "medium"
+    rules:
+      - c1_2: "inside_bar_setup"
+      - c3: "false_breakout_above_c1_high"
+      - c4: "rapid_reverse_close_below_c1_low"
+      
+  - id: "CS_121"
+    name: "Bullish Outside Bar Breakout"
+    type: "bullish_continuation"
+    reliability: "medium"
+    rules:
+      - c1_2: "outside_bar_engulfing"
+      - c3: "white_breaks_high"
+      - volume: "increase"
+
+  - id: "CS_122"
+    name: "Bearish Outside Bar Breakdown"
+    type: "bearish_continuation"
+    reliability: "medium"
+    rules:
+      - c1_2: "outside_bar_engulfing"
+      - c3: "black_breaks_low"
+      - volume: "increase"
+
+  # --- MODIFIED GAP PATTERNS ---
+  - id: "CS_123"
+    name: "Two Black Gapping"
+    type: "bearish_continuation"
+    reliability: "high"
+    rules:
+      - c1: "black_gap_down"
+      - c2: "black_larger_body"
+      - trend: "down"
+
+  - id: "CS_124"
+    name: "Two White Gapping"
+    type: "bullish_continuation"
+    reliability: "high"
+    rules:
+      - c1: "white_gap_up"
+      - c2: "white_larger_body"
+      - trend: "up"
+      
+  # --- KICKING VARIANTS (Specific Confirmation) ---
+  - id: "CS_125"
+    name: "Bullish Kicking Confirmed"
+    type: "bullish_reversal"
+    reliability: "very_high"
+    rules:
+      - c1_2: "bullish_kicking_setup"
+      - c3: "white_continues_trend"
+      
+  - id: "CS_126"
+    name: "Bearish Kicking Confirmed"
+    type: "bearish_reversal"
+    reliability: "very_high"
+    rules:
+      - c1_2: "bearish_kicking_setup"
+      - c3: "black_continues_trend"
+
+  # --- UNIQUE DOJI FORMATIONS ---
+  - id: "CS_127"
+    name: "Long Legged Doji at Support"
+    type: "bullish_reversal"
+    reliability: "high"
+    rules:
+      - pattern: "long_legged_doji"
+      - location: "major_support_level"
+      - trend: "down"
+      
+  - id: "CS_128"
+    name: "Long Legged Doji at Resistance"
+    type: "bearish_reversal"
+    reliability: "high"
+    rules:
+      - pattern: "long_legged_doji"
+      - location: "major_resistance_level"
+      - trend: "up"
+      
+  # --- EXOTIC JAPANESE TERMS ---
+  - id: "CS_129"
+    name: "Ichi Moku (Cloud Line)"
+    type: "support_resistance"
+    reliability: "medium"
+    rules:
+      - pattern: "spanning_candle_touch"
+      - context: "kumo_cloud"
+
+  - id: "CS_130"
+    name: "Sankawa (Three Rivers Variation)"
+    type: "bullish_reversal"
+    reliability: "medium"
+    rules:
+      - c1: "long_black"
+      - c2_3: "higher_highs_higher_lows"
+      - c4: "long_black_breakout"

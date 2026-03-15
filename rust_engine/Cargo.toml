@@ -1,0 +1,36 @@
+# Build script for Rust Zero Bottleneck Edition
+
+[package]
+name = "cenayang-market-zero-bottleneck"
+version = "3.0.0"
+edition = "2021"
+authors = ["Cenayang Market Team"]
+description = "Zero-bottleneck ultra-low-latency trading gateway"
+
+[dependencies]
+tokio = { version = "1.35", features = ["full", "tracing"] }
+crossbeam-channel = "0.5"
+crossbeam-queue = "0.3"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+chrono = "0.4"
+lazy_static = "1.4"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[dev-dependencies]
+criterion = "0.5"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.dev]
+opt-level = 0
+
+[[bin]]
+name = "cenayang-gateway"
+path = "src/main.rs"

@@ -1,0 +1,44 @@
+# Prometheus Configuration for Cenayang Market
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'cenayang-market'
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+rule_files: []
+
+scrape_configs:
+  # Go Orchestrator
+  - job_name: 'go-orchestrator'
+    static_configs:
+      - targets: ['go-orchestrator:8090']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+
+  # Rust Gateway
+  - job_name: 'rust-gateway'
+    static_configs:
+      - targets: ['rust-gateway:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+
+  # NATS
+  - job_name: 'nats'
+    static_configs:
+      - targets: ['nats:8222']
+
+  # Redis
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

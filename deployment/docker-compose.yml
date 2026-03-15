@@ -1,0 +1,150 @@
+# ============================================================================
+# CENAYANG MARKET - Docker Compose for Live Trading
+# ============================================================================
+
+version: '3.8'
+
+services:
+  # Rust Gateway - Ultra-low latency tick processing
+  rust-gateway:
+    build:
+      context: ../rust_engine
+      dockerfile: Dockerfile
+    container_name: cenayang-rust-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - RUST_LOG=info
+      - EXCHANGE_WS_URL=${EXCHANGE_WS_URL:-wss://stream.binance.com:9443/ws}
+      - NATS_URL=nats://nats:4222
+    depends_on:
+      - nats
+    networks:
+      - trading-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '1'
+          memory: 512M
+
+  # Go Orchestrator - State management and API
+  go-orchestrator:
+    build:
+      context: ../go_api
+      dockerfile: Dockerfile
+    container_name: cenayang-go-orchestrator
+    ports:
+      - "8090:8090"
+    environment:
+      - GIN_MODE=release
+      - MAX_DRAWDOWN_PCT=5.0
+      - MAX_POSITION_SIZE=100000
+      - DAILY_LOSS_LIMIT=10000
+      - NATS_URL=nats://nats:4222
+    depends_on:
+      - nats
+      - redis
+    networks:
+      - trading-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '1'
+          memory: 512M
+
+  # Frontend - React Dashboard
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: cenayang-frontend
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_API_URL=http://go-orchestrator:8090
+      - VITE_WS_URL=ws://go-orchestrator:8090/ws
+    depends_on:
+      - go-orchestrator
+    networks:
+      - trading-network
+    restart: unless-stopped
+
+  # NATS - Message broker
+  nats:
+    image: nats:2.10-alpine
+    container_name: cenayang-nats
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    command: ["--http_port", "8222", "--cluster", "nats://0.0.0.0:6222"]
+    networks:
+      - trading-network
+    restart: unless-stopped
+    volumes:
+      - nats-data:/data
+
+  # Redis - State cache
+  redis:
+    image: redis:7-alpine
+    container_name: cenayang-redis
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes", "--save", "60", "1000"]
+    networks:
+      - trading-network
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+
+  # Prometheus - Metrics collection
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: cenayang-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - trading-network
+    restart: unless-stopped
+
+  # Grafana - Metrics visualization
+  grafana:
+    image: grafana/grafana:10.2.0
+    container_name: cenayang-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana-dashboards:/etc/grafana/provisioning/dashboards
+    depends_on:
+      - prometheus
+    networks:
+      - trading-network
+    restart: unless-stopped
+
+networks:
+  trading-network:
+    driver: bridge
+
+volumes:
+  nats-data:
+  redis-data:
+  prometheus-data:
+  grafana-data:

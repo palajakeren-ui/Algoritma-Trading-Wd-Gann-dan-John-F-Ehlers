@@ -1,0 +1,165 @@
+# ============================================================================
+# SSL/TLS CONFIGURATION — Production Security
+# ============================================================================
+
+# Generate self-signed certificates for development
+# For production, use Let's Encrypt with cert-manager
+
+---
+# Development Certificate (DO NOT USE IN PRODUCTION)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: trading-tls-secret-dev
+  namespace: trading-system
+type: kubernetes.io/tls
+data:
+  # These are placeholder values - generate real certificates
+  tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURhekNDQWxPZ0F3SUJBZ0lVZjNGdmJhWnNkclVMYjIyVHVFWUlzNmxsWkhrd0RRWUpLb1pJaHZjTkFRRUwKQlFBd1JURUxNQWtHQTFVRUJoTUNWVk14Q3pBSkJnTlZCQWdNQWtOQk1SSXdFQVlEVlFRSERBbFRZVzRnUm5KaApibU54TVJVd0V3WURWUVFLREFsRmVHRnRjR3hsSUVOdk1Sc3dHUVlEVlFRRERCSmhjSEF1WlhoaGJYQnNaUzVqCmIyMHdIaGNOTWpRd01UQXhNREF3TURBd1doY05NalV3TVRBeE1EQXdNREF3V2pCaU1Rc3dDUVlEVlFRR0V3SlYKVXpFTE1Ba0dBMVVFQ0F3Q1EwRXhFakFRQmdOVkJBY01DVk5oYmlCR2NtRnVZMmt4RlRBVEJnTlZCQW9NREVWNApZVzF3YkdVZ1EyOXRNUnN3R1FZRFZRUUREQkpoY0hBdVpYaGhiWEJzWlM1amIyMHdnZ0VpTUEwR0NTcUdTSWIzCkRRRUJBUVVBQTRJQkR3QXdnZ0VLQW9JQkFRREJqMXVPbnlKZ2ZsbFd1cnBVV1d4a3RKSHBIWkNpRWtLQVdvTXUKYldGblZGUXhFQ3V6RWFmSERGYmd4T1o1RXEvMnZHN2NvQWJacEo1T0w4aUZxVnJQbUExTkZ1bVdvSWUybzZIVAp6Y3hhQjY2RkJYSVNZNzlHVzlzK2hVU0h4aE9SekFCbFdhcTEya0ZvVzVjUjZ1dmVqRmpuRHNZUzVqY0VqZzVJCk1hSHdTWXJjYjZyZGt4QXRiRStLa28xdmVuU0hBQ2l1d0dhMGIydVdJSlN6eWpBTXB3Z2g3bkZ4SStTVjdaSngKUlR0T0FjM2FYCg==
+  tls.key: LS0tLS1CRUdJTiBFQyBQUklWQVRFIEtFWS0tLS0tCk1IUUNBUUVFSUdZVzVKOWl4T0hwRHRJOXRoRmZiK0FXVUtaYk05d1FlS3ZjdkpXTU40YndvQWNHQlN1QkJBQUsKb1VRRFFnQUVScE5lSzFsTmRPNlFyRnNheWhxNHlNN1VLOENWQm9kSVIyd1h1c2g3UkszWkNMaHJiTDVIMmVMaApZMFI2bDJ1RzUwNjdNS1gvOUlmdmxZN3NjYXNNS3hPTi9rZ1gvNzhXNkNqbk5KZkZDZ1F3PT0KLS0tLS1FTkQgRUMgUFJJVkFURSBLRVktLS0tLQo=
+
+---
+# cert-manager ClusterIssuer for Let's Encrypt (Production)
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: admin@cenayang.com
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+
+---
+# cert-manager ClusterIssuer for Let's Encrypt (Staging)
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    email: admin@cenayang.com
+    privateKeySecretRef:
+      name: letsencrypt-staging
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+
+---
+# Certificate for trading domain
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: trading-certificate
+  namespace: trading-system
+spec:
+  secretName: trading-tls-secret
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+  - trading.cenayang.com
+  - api.trading.cenayang.com
+
+---
+# Network Policy - Restrict traffic
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: trading-network-policy
+  namespace: trading-system
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: trading-system
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 8080
+    - protocol: TCP
+      port: 8090
+    - protocol: TCP
+      port: 80
+  egress:
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 4222
+    - protocol: TCP
+      port: 6379
+    - protocol: UDP
+      port: 53
+
+---
+# Pod Security Policy
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: trading-psp
+  namespace: trading-system
+spec:
+  privileged: false
+  runAsUser:
+    rule: MustRunAsNonRoot
+  seLinux:
+    rule: RunAsAny
+  fsGroup:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  volumes:
+  - 'configMap'
+  - 'emptyDir'
+  - 'projected'
+  - 'secret'
+  - 'downwardAPI'
+  - 'persistentVolumeClaim'
+
+---
+# Rate Limiting Middleware
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: rate-limit
+  namespace: trading-system
+spec:
+  rateLimit:
+    average: 100
+    burst: 50
+    period: 1s
+
+---
+# Security Headers Middleware
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: security-headers
+  namespace: trading-system
+spec:
+  headers:
+    frameDeny: true
+    browserXssFilter: true
+    contentTypeNosniff: true
+    forceSTSHeader: true
+    stsIncludeSubdomains: true
+    stsPreload: true
+    stsSeconds: 31536000
+    contentSecurityPolicy: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' wss://trading.cenayang.com; img-src 'self' data:; font-src 'self';"
