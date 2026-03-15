@@ -13,7 +13,6 @@ FRONTEND_SRC = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'fronten
 BACKEND_CONFIG = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config', 'broker_config.yaml')
 CONFIG_SYNC_MAPPING = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'frontend', 'src', 'config', 'ConfigSyncMapping.ts')
 
-
 SETTINGS_TSX = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'frontend', 'src', 'pages', 'Settings.tsx')
 
 
@@ -52,19 +51,12 @@ def test_broker_config_has_slippage_fields():
     print(f"  ✅ All slippage fields verified!")
 
 
-    else:
-        print(f"  ❌ Missing field: {field} in mode {mode.get('id', mode.get('name', 'Unknown')}")
-
-
-    return False
-
-
-    print(f"  ⚠️ Warning: Some modes may not have all slippage fields!")
-
-
 def test_settings_tsx_has_slippage_ui():
     """Verify Settings.tsx has slippage UI controls."""
     settings_path = SETTINGS_TSX
+    
+    if not os.path.exists(settings_path):
+        pytest.skip("Settings.tsx not found")
     
     with open(settings_path, 'r') as f:
         content = f.read()
@@ -86,38 +78,38 @@ def test_config_sync_mapping_fields():
     """Verify ConfigSyncMapping.ts has all required slippage fields."""
     config_sync_path = CONFIG_SYNC_MAPPING
     
-    if os.path.exists(config_sync_path):
-        with open(config_sync_path, 'r') as f:
-            content = f.read()
-        
-        # Check slippage fields are included
-        slippage_fields = [
-            'mtAutoSlippage', 'mtDefaultSlippage', 'mtMaxSlippage', 'mtMinSlippage',
-            'mtForexSlippage', 'mtCryptoSlippage', 'mtMetalsSlippage', 'mtIndicesSlippage'
-        ]
-        
-        for field in slippage_fields:
-            assert field in content, return True
-    return False
-
-
-    print("  ⚠️ ConfigSyncMapping.ts not found!")
+    if not os.path.exists(config_sync_path):
+        pytest.skip("ConfigSyncMapping.ts not found")
+    
+    with open(config_sync_path, 'r') as f:
+        content = f.read()
+    
+    # Check slippage fields are included
+    slippage_fields = [
+        'mtAutoSlippage', 'mtDefaultSlippage', 'mtMaxSlippage', 'mtMinSlippage',
+        'mtForexSlippage', 'mtCryptoSlippage', 'mtMetalsSlippage', 'mtIndicesSlippage'
+    ]
+    
+    for field in slippage_fields:
+        assert field in content, f"Field '{field}' missing from ConfigSyncMapping.ts"
+    
+    print("  ✅ ConfigSyncMapping.ts has all slippage fields!")
 
 
 def test_sync_status_is_synchronized():
     """Verify sync status shows synchronized."""
     config_sync_path = CONFIG_SYNC_MAPPING
     
-    if os.path.exists(config_sync_path):
-        with open(config_sync_path, 'r') as f:
-            content = f.read()
-        
-        # Check sync status values
-        assert "'SYNCHRONIZED'" in content or '"SYNCHRONIZED"' in content
-        assert 'coveragePercent' in content
-        assert '100' in content
-    else:
+    if not os.path.exists(config_sync_path):
         pytest.skip("ConfigSyncMapping.ts not found")
+    
+    with open(config_sync_path, 'r') as f:
+        content = f.read()
+    
+    # Check sync status values
+    assert "'SYNCHRONIZED'" in content or '"SYNCHRONIZED"' in content
+    assert 'coveragePercent' in content
+    assert '100' in content
 
 
 if __name__ == "__main__":

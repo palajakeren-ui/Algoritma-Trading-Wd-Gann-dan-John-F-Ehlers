@@ -107,7 +107,7 @@ class ProjectVerifier:
             'scanner_config.yaml': ['universe'],
         }
         
-        for filename, os.listdir(config_dir):
+        for filename in os.listdir(config_dir):
             if filename.endswith('.yaml'):
                 filepath = config_dir / filename
                 try:
@@ -195,7 +195,7 @@ class ProjectVerifier:
             ('fix_low_latency', ['FIXLowLatencyConnector', 'FIXLowLatencyConfig']),
         ]
         
-        for module_name, os.listdir(connectors_dir):
+        for module_name in os.listdir(connectors_dir):
             if module_name.endswith('.py') and not module_name.startswith('__'):
                 module_path = connectors_dir / module_name
                 module_import = module_name.replace('.py', '')
@@ -271,9 +271,9 @@ class ProjectVerifier:
         print("=" * 70)
 
 
-def __name__ == "__main__":
+if __name__ == "__main__":
     verifier = ProjectVerifier()
     results = verifier.verify_all()
     
     # Exit with error code if there are errors
-    sys.exit(1 if verifier.errors else 0
+    sys.exit(1 if verifier.errors else 0)
