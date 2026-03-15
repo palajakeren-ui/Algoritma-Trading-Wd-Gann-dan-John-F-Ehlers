@@ -182,7 +182,7 @@ def start_server(host='0.0.0.0', port=5000, debug=False):
     print(f"\n[4/4] Starting server on {host}:{port}...")
     
     try:
-        from api_v2 import app, socketio
+        from api import app
         
         print(f"""
 ╔══════════════════════════════════════════════════════════════════╗
@@ -196,10 +196,13 @@ def start_server(host='0.0.0.0', port=5000, debug=False):
 ╚══════════════════════════════════════════════════════════════════╝
         """)
         
-        socketio.run(app, host=host, port=port, debug=debug, use_reloader=False)
+        # Use standard Flask run (no socketio needed)
+        app.run(host=host, port=port, debug=debug, use_reloader=False)
         
     except Exception as e:
         print(f"\n   ✗ Failed to start server: {e}")
+        import traceback
+        traceback.print_exc()
         return False
     
     return True
